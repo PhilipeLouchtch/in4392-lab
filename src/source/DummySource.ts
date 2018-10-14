@@ -1,13 +1,20 @@
 import {Source} from "./Source";
+import {Message} from "./Message";
 
-class SimpleSource implements Source<String> {
-    private seqNum = 0;
+class SimpleSource implements Source<Message<string, string>> {
+    private seqNum;
 
-    provideContent(): String {
-        return "This is a static message (#" + this.sequenceNumber() + ")";
+    constructor() {
+        this.seqNum = 0;
     }
 
-    next(): IteratorResult<String> {
+    provideContent(): Message<string, string> {
+        const seqNum = this.sequenceNumber();
+
+        return {identifier: seqNum.toString(), data: `This is message #$seqNum`};
+    }
+
+    next(): IteratorResult<Message<string, string>> {
         return {done: false, value: this.provideContent()};
     }
 

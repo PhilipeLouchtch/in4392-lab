@@ -1,87 +1,47 @@
 import SQS = require("aws-sdk/clients/sqs");
-import {Lazy} from "./Lazy";
-import {Message, SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
-import {QueueUrl, QueueUrl} from "aws-sdk/clients/iot";
+import {SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
+import {Message} from "../source/Message";
 
-export class SqsQueue<T> {
+export class SqsQueue<TMessage extends Message<string, string>> {
     private sqs: SQS;
-    private queueUrl: Lazy<Promise<string>>;
+    private queueUrl: Promise<string>;
 
     constructor(sqs: SQS, queueName: string) {
         this.sqs = sqs;
-        this.queueUrl = new Lazy<Promise<string>>(() => {
-            return this.resolveNameToUrl(queueName);
-        })
+
+        this.queueUrl = this.resolveNameToUrl(queueName);
     }
 
-    async run() {
-
-        let dataLimit = this.job.limit;
-
-        // hacky promise chain of batches
-        let promise = new Promise(resolve => resolve());
-        for (let i = 0; i < dataLimit; i += 10) {
-            promise.then(() => {
-                return this.sqs.sendMessageBatch(this.makeSqsBatch(dataQueueUrl)).promise();
-            })
-        }
-
-        return promise;
-    }
-
-    private makeSqsBatch(queueUrl: string) : SendMessageBatchRequest {
-        let msgs = [];
-        for(let i = 0; i < 10; i++) {
-            let iteratorResult = this.source.next();
-
-            if (iteratorResult.done == false){
-                msgs.push(iteratorResult.value);
+    private async makeSqsBatch(source: Iterator<TMessage>) : Promise<SendMessageBatchRequest> {
+        return new Promise<SendMessageBatchRequest>(async resolve => {
+            let msgs : SendMessageBatchRequestEntry[] = [];
+            for(let i = 0; i < 10; i++) {
+                let iteratorResult = source.next();
+                if (iteratorResult.done == false){
+                    msgs.push({Id: iteratorResult.value.identifier, MessageBody: iteratorResult.value.data});
+                }
             }
-        }
 
-        return {QueueUrl: queueUrl, Entries: msgs}
+            resolve({QueueUrl: await this.queueUrl, Entries: msgs});
+        });
     }
 
     // Will create a maximum sized batch or until the provider is depleted
-    public async sendBatched(msgProvider: Iterator<T>) {
-
-        let msgs = [];
-        for(let i = 0; i < 10; i++) {
-            let iteratorResult = msgProvider.next();
-
-            if (iteratorResult.done) {
-                break;
-            }
-
-            let msg = {Id: 1; Message: iteratorResult.value}
-            msgs.push(msg)
-        }
-
-        return this.queueUrl.get()
-            .then(url => new SendMsgBatchReq(url, msgs))
-            .then(batchRequest => {
-                this.sqs.sendMessageBatch(batchRequest, undefined)
-            });
+    public async sendBatched(msgProvider: Iterator<TMessage>) {
+        return this.makeSqsBatch(msgProvider)
+            .then(sendMsgBatchRequest => this.sqs.sendMessageBatch(sendMsgBatchRequest));
     }
 
-    // This a lazy-init function
+    // Resolve the given queue-name to a sqs queue url. The name is used as a prefix filter for all the available queues.
     private async resolveNameToUrl(queueName: string): Promise<string> {
         return this.sqs.listQueues({QueueNamePrefix: queueName}).promise()
             .then(value => {
-                if (value.QueueUrls && value.QueueUrls[0])
+                if (value.QueueUrls && value.QueueUrls[0]){
                     return value.QueueUrls[0];
-                else
-                    throw new Error(`No queue found with prefix ${queueName}`);
+                }
+
+                // No permissions, or no queues with given prefix exists
+                throw new Error(`No queue found with prefix ${queueName}`);
             });
-    }
-}
-
-class SendMsgBatchReq<T> implements SendMessageBatchRequest {
-    Entries: SQS.SendMessageBatchRequestEntryList;
-    QueueUrl: string;
-
-    constructor(QueueUrl: string, Entries: T[]) {
-        this.Entries = Entries;
-        this.QueueUrl = QueueUrl;
     }
 }
