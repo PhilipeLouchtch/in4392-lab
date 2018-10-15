@@ -1,7 +1,6 @@
 import SQS = require("aws-sdk/clients/sqs");
-import {ReceiveMessageRequest, SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
+import {SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {Message} from "../source/Message";
-import {message} from "aws-sdk/clients/sns";
 
 export class SqsQueue<TMessage extends Message<string, string>> {
     private sqs: SQS;
@@ -19,26 +18,38 @@ export class SqsQueue<TMessage extends Message<string, string>> {
             .then(sendMsgBatchRequest => this.sqs.sendMessageBatch(sendMsgBatchRequest));
     }
 
-    public async receive(): Promise<Message<string, string>[]> {
+    public async receive(msgConsumer: (string) => Promise<void>) {
 
         let handleUndefined = (value: string|undefined) => value ? value : "";
 
-        let promise = this.queueUrl.then(queueUrl => {
-            return this.sqs.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1}).promise();
-        }).then(value => {
-            if (!value.Messages) {
-                // no messages received
-                return [];
-            }
+        let promise = this.queueUrl.then(
+            queueUrl => this.sqs.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1}).promise()
 
+        ).then(
+            value => value.Messages ? value.Messages : []
+
+        ).then(messages =>
             // Convert all messages with valid bodies to an array of strings
-            let msgs = value.Messages.filter(msg => msg.Body !== undefined)
+            messages.filter(msg => msg.Body !== undefined)
                 .map(sqsMsg => {
-                    let msg: Message<string,string> = {identifier: handleUndefined(sqsMsg.MessageId), data: handleUndefined(sqsMsg.Body)};
-                    return msg;
-                });
+                    return {identifier: handleUndefined(sqsMsg.ReceiptHandle), data: handleUndefined(sqsMsg.Body)};
+                })
 
-            return msgs;
+        ).then(msgs => {
+            return Promise.all(
+                msgs.map(msg => this.queueUrl.then(queueUrl => {
+                    try {
+                        msgConsumer(msg.data);
+                        // remove msg from queue if processed successfully
+                        return this.sqs.deleteMessage({QueueUrl: queueUrl, ReceiptHandle: msg.identifier}).promise();
+                    }
+                    catch (e) {
+                        console.error(`Failed to process msg ["${msg.data}"], error: ${e}`);
+                        return new Promise(resolve => resolve());
+                    }
+
+                })
+            ));
         });
 
         return promise
