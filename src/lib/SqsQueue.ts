@@ -1,6 +1,7 @@
 import SQS = require("aws-sdk/clients/sqs");
-import {SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
+import {ReceiveMessageRequest, SendMessageBatchRequest, SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {Message} from "../source/Message";
+import {message} from "aws-sdk/clients/sns";
 
 export class SqsQueue<TMessage extends Message<string, string>> {
     private sqs: SQS;
@@ -12,7 +13,38 @@ export class SqsQueue<TMessage extends Message<string, string>> {
         this.queueUrl = this.resolveNameToUrl(queueName);
     }
 
-    private async makeSqsBatch(source: Iterator<TMessage>) : Promise<SendMessageBatchRequest> {
+    // Will create a maximum sized batch or until the provider is depleted
+    public async sendBatched(msgProvider: Iterator<TMessage>) {
+        return this.makeSqsBatch(msgProvider)
+            .then(sendMsgBatchRequest => this.sqs.sendMessageBatch(sendMsgBatchRequest));
+    }
+
+    public async receive(): Promise<Message<string, string>[]> {
+
+        let handleUndefined = (value: string|undefined) => value ? value : "";
+
+        let promise = this.queueUrl.then(queueUrl => {
+            return this.sqs.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1}).promise();
+        }).then(value => {
+            if (!value.Messages) {
+                // no messages received
+                return [];
+            }
+
+            // Convert all messages with valid bodies to an array of strings
+            let msgs = value.Messages.filter(msg => msg.Body !== undefined)
+                .map(sqsMsg => {
+                    let msg: Message<string,string> = {identifier: handleUndefined(sqsMsg.MessageId), data: handleUndefined(sqsMsg.Body)};
+                    return msg;
+                });
+
+            return msgs;
+        });
+
+        return promise
+    }
+
+    private async makeSqsBatch(source: Iterator<TMessage>): Promise<SendMessageBatchRequest> {
         return new Promise<SendMessageBatchRequest>(async resolve => {
             let msgs : SendMessageBatchRequestEntry[] = [];
             for(let i = 0; i < 10; i++) {
@@ -24,12 +56,6 @@ export class SqsQueue<TMessage extends Message<string, string>> {
 
             resolve({QueueUrl: await this.queueUrl, Entries: msgs});
         });
-    }
-
-    // Will create a maximum sized batch or until the provider is depleted
-    public async sendBatched(msgProvider: Iterator<TMessage>) {
-        return this.makeSqsBatch(msgProvider)
-            .then(sendMsgBatchRequest => this.sqs.sendMessageBatch(sendMsgBatchRequest));
     }
 
     // Resolve the given queue-name to a sqs queue url. The name is used as a prefix filter for all the available queues.
