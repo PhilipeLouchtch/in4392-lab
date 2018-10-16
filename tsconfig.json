@@ -2,7 +2,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es6",
-    "rootDir": "./src",
+    "rootDirs": [
+      "./src",
+      "./packages"
+    ],
     "outDir": "./dist",
     "noImplicitAny": false,
     "sourceMap": false,
@@ -10,16 +13,17 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "declaration": false,
-    "listFiles": false ,
+    "listFiles": false,
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
     "strict": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": false
   },
   "exclude": [
     ".vscode",
     ".git",
-    "node_modules"
+    "node_modules",
+    "spec",
   ],
   "compileOnSave": false,
   "buildOnSave": false,

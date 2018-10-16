@@ -3,6 +3,7 @@ class DaemonLambda {
     }
 
     run() {
+        setInterval(() => console.log("boom"), 1000)
         // setup queues, lambda, permissions
         // launch processing for the request
         // create persistence entry for running request
@@ -13,3 +14,5 @@ class DaemonLambda {
         // client will keep polling untill a result is available
     }
 }
+
+export default DaemonLambda
