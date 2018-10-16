@@ -3,7 +3,6 @@ class DaemonLambda {
     }
 
     run() {
-        setInterval(() => console.log("boom"), 1000)
         // setup queues, lambda, permissions
         // launch processing for the request
         // create persistence entry for running request
