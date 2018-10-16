@@ -1,11 +1,11 @@
 import SQS = require("aws-sdk/clients/sqs");
-import {Source} from "../source/Source";
-import {JobRequest} from "../JobRequest";
-import {SendMessageBatchResult} from "aws-sdk/clients/sqs";
-import {SqsQueue} from "../lib/SqsQueue";
-import {Message} from "../source/Message";
-import {AWSError} from "aws-sdk";
-import {Request} from "aws-sdk/lib/request"
+import { Source } from "../source/Source";
+import { JobRequest } from "../JobRequest";
+import { SendMessageBatchResult } from "aws-sdk/clients/sqs";
+import { SqsQueue } from "../lib/SqsQueue";
+import { Message } from "../source/Message";
+import { AWSError } from "aws-sdk";
+import { Request } from "aws-sdk/lib/request"
 
 // @ts-ignore
 export class FeedLambda {
@@ -23,7 +23,7 @@ export class FeedLambda {
         let dataLimit = this.job.limit;
 
         // TODO: can't the TS compiler infer the type somehow?
-        const promises : Promise<Request<SendMessageBatchResult, AWSError>>[] = [];
+        const promises: Promise<Request<SendMessageBatchResult, AWSError>>[] = [];
 
         for (let i = 0; i < dataLimit; i += 10) {
             // TODO: check for race conditions wrt the source
@@ -33,3 +33,5 @@ export class FeedLambda {
         return Promise.all(promises);
     }
 }
+
+export default FeedLambda

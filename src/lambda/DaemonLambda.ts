@@ -13,3 +13,5 @@ class DaemonLambda {
         // client will keep polling untill a result is available
     }
 }
+
+export default DaemonLambda
