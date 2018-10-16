@@ -1,5 +1,5 @@
-import DataSourceLambda from "../../src/lambda/DataSourceLambda"
+import FeedLambda from "../../src/lambda/FeedLambda"
 
-// const lambda = new DataSourceLambda(); 
+// const lambda = new FeedLambda(); 
 
 // lambda.run();

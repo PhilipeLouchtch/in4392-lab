@@ -34,4 +34,4 @@ export class FeedLambda {
     }
 }
 
-export default DataSourceLambda
+export default FeedLambda
