@@ -7,7 +7,8 @@ import {Message} from "../source/Message";
 import {AWSError} from "aws-sdk";
 import {Request} from "aws-sdk/lib/request"
 
-class DataSourceLambda {
+// @ts-ignore
+export class FeedLambda {
     private datasourceQueue: SqsQueue<Message<string, string>>;
     private source: Source<Message<string, string>>;
     private job: JobRequest;
@@ -18,7 +19,6 @@ class DataSourceLambda {
         this.job = job;
     }
 
-    // TODO: check how this function handles long promise chains (order of thousands)
     async run() {
         let dataLimit = this.job.limit;
 
