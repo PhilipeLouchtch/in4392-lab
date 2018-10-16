@@ -1,17 +1,19 @@
 import {Source} from "./Source";
 import {Message} from "./Message";
 
-class SimpleSource implements Source<Message<string, string>> {
+export class SimpleSource implements Source<Message<string, string>> {
     private seqNum;
+    private templateString: string;
 
-    constructor() {
+    constructor(templateString: string) {
+        this.templateString = templateString;
         this.seqNum = 0;
     }
 
     provideContent(): Message<string, string> {
         const seqNum = this.sequenceNumber();
 
-        return {identifier: seqNum.toString(), data: `This is message #$seqNum`};
+        return {identifier: seqNum.toString(), data: `${this.templateString} ${seqNum}`};
     }
 
     next(): IteratorResult<Message<string, string>> {
