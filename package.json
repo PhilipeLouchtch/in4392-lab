@@ -19,6 +19,6 @@
   },
   "scripts": {
     "test": "ts-node node_modules/jasmine/bin/jasmine",
-    "build-ts": "tsc"
+    "build": "npx webpack --config webpack.config.js"
   }
 }
