@@ -23,7 +23,9 @@ export class SqsQueue<TMessage extends Message<string, string>> {
         let handleUndefined = (value: string|undefined) => value ? value : "";
 
         let promise = this.queueUrl.then(
-            queueUrl => this.sqs.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1}).promise()
+            queueUrl =>
+                this.sqs.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1, WaitTimeSeconds: 10})
+                    .promise()
 
         ).then(
             value => value.Messages ? value.Messages : []
