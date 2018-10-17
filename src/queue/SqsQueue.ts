@@ -13,8 +13,14 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
         this.queueUrl = queueUrl;
     }
 
+    public async sendSingle(msg: TMessage) {
+        return this.queueUrl.promise().then(queueUrl => {
+            this.sqsClient.sendMessage({QueueUrl: queueUrl, MessageBody: msg.data})
+        })
+    }
+
     // Will create a maximum sized batch or until the provider is depleted
-    public async sendBatched(msgProvider: Iterator<TMessage>): Promise<void> {
+    public async sendBatched(msgProvider: Iterator<TMessage>) {
         return this.makeSqsBatch(msgProvider)
             .then(sendMsgBatchRequest => this.sqsClient.sendMessageBatch(sendMsgBatchRequest))
             .then(() => {}); // conform to the interface
