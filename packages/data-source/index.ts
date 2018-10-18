@@ -1,4 +1,4 @@
-import FeedLambda from "../../src/lambda/FeedLambda"
+import FeedLambda from "../../src/lambda/concrete/FeedLambda"
 
 // const lambda = new FeedLambda(); 
 

@@ -1,4 +1,4 @@
-import DaemonLambda from "../../src/lambda/DaemonLambda"
+import DaemonLambda from "../../src/lambda/concrete/DaemonLambda"
 
 const lambda = new DaemonLambda();
 
