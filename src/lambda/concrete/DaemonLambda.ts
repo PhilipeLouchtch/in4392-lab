@@ -1,8 +1,12 @@
-class DaemonLambda {
-    constructor() {
+import {TimeImmortalLambda} from "../TimeImmortalLambda";
+import {ExecutionTime} from "../ExecutionTime";
+
+export class DaemonLambda extends TimeImmortalLambda {
+    constructor(executionTime: ExecutionTime) {
+        super(executionTime);
     }
 
-    run() {
+    async implementation() {
         // setup queues, lambda, permissions
         // launch processing for the request
         // create persistence entry for running request
@@ -14,4 +18,4 @@ class DaemonLambda {
     }
 }
 
-export default DaemonLambda
+export default DaemonLambda;
