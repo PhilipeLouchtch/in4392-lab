@@ -5,7 +5,7 @@ import {ReduceLambda} from "./ReduceLambda";
 
 export class SummingReduceLambda extends ReduceLambda<string> {
     constructor(queue: Queue<Message<string, string>>) {
-        const reduceOperation = new AdditionReduceOperation(string => Number(string));
+        const reduceOperation = new AdditionReduceOperation(value => Number(value));
         super(queue, reduceOperation);
     }
 }
