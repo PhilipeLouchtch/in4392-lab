@@ -1,13 +1,12 @@
 import {StepOneQueue} from "../queue/StepOneQueue";
 import {StepTwoQueue} from "../queue/StepTwoQueue";
+import {RandomChance} from "../lib/RandomChance";
 
 export class ProcessStepOneLambda {
-    private stepOneQueue: StepOneQueue;
-    private stepTwoQueue: StepTwoQueue;
 
-    constructor(stepOneQueue: StepOneQueue, stepTwoQueue: StepTwoQueue) {
-        this.stepOneQueue = stepOneQueue;
-        this.stepTwoQueue = stepTwoQueue;
+    constructor(private readonly stepOneQueue: StepOneQueue,
+                private readonly stepTwoQueue: StepTwoQueue,
+                private readonly chance: RandomChance) {
     }
 
     async run() {
@@ -17,7 +16,7 @@ export class ProcessStepOneLambda {
 
     private async processMsg(data: string) {
         // pretend to be a filter operation, allow random msgs to pass
-        if (Math.random() % 2 == 1) {
+        if (this.chance.ofPercent(50)) {
             // naive, single-msg implementation. If optimization needed,
             // can rewrite into a Source implementation for batching
             return this.stepTwoQueue.sendSingle({identifier: "", data: data});
