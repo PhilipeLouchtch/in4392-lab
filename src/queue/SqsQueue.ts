@@ -30,7 +30,7 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
         const handleUndefined = (value: string|undefined) => value ? value : "";
 
         const queueUrl = await this.queueUrl.promise();
-        const msg = await this.sqsClient.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1}).promise();
+        const msg = await this.sqsClient.receiveMessage({QueueUrl: queueUrl, MaxNumberOfMessages: 1, WaitTimeSeconds: 10}).promise();
 
         if (!msg.Messages || msg.Messages.length == 0) {
             return queueIsEmptyHandler();
