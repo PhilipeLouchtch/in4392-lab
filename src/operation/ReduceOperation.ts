@@ -1,3 +1,3 @@
-export interface ReduceOperation<TIn, TOut> {
-    reduce(one: TIn, two: TIn): TOut;
+export interface ReduceOperation<T> {
+    reduce(one: T, two: T): T;
 }
