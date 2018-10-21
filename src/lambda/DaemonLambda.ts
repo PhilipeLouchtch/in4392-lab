@@ -1,8 +1,31 @@
+import { SQS, Lambda } from 'aws-sdk';
+import { SimpleCloudComponents } from '../cloud/SimpleCloudComponents';
+import { SimpleCloudBuilder } from '../cloud/SimpleCloudBuilder';
+import { SimpleCloudController } from '../cloud/SimpleCloudController';
+
 class DaemonLambda {
-    constructor() {
+
+    private lambdaClient: Lambda
+    private sqsClient: SQS
+    private uuid: string
+
+    constructor(sqsClient: SQS, lambdaClient: Lambda, uuid: string) {
+        this.lambdaClient = lambdaClient
+        this.sqsClient = sqsClient
+        this.uuid = uuid
     }
 
-    run() {
+    async run() {
+
+        // Create a cloud
+        const builder = new SimpleCloudBuilder(this.lambdaClient, this.sqsClient)
+        const cloud: SimpleCloudComponents = await builder.createCloud(this.uuid)
+
+        // Wrap in a controller
+        const controller = new SimpleCloudController(cloud)
+
+        controller.start()
+
         // setup queues, lambda, permissions
         // launch processing for the request
         // create persistence entry for running request
