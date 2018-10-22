@@ -1,6 +1,6 @@
 import { Lambda, SQS } from 'aws-sdk';
-import { LambdaController } from './lib/LambdaController';
-import { QueueController } from './lib/QueueController';
+import { LambdaController } from './control/LambdaController';
+import { QueueController } from './control/QueueController';
 import { FeedDeps, OneDeps, ReduceDeps } from './LambdaDependencies';
 import { SimpleCloudComponents } from './SimpleCloudComponents';
 

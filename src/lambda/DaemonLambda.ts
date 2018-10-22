@@ -1,8 +1,11 @@
 import { SQS, Lambda } from 'aws-sdk';
 import { SimpleCloudComponents } from '../cloud/SimpleCloudComponents';
-import { SimpleCloudBuilder } from '../cloud/SimpleCloudBuilder';
-import { SimpleCloudController } from '../cloud/SimpleCloudController';
+import { SimpleCloudBuilder } from '../cloud/SimpleCloudBuilder'
+import { SimpleCloudController } from '../cloud/SimpleCloudController'
+import { AlwaysOnePolicy } from '../cloud/policies/AlwaysOnePolicy'
+import { PerformanceMonitor } from '../cloud/monitoring/PerformanceMonitor'
 
+const SCHEDULING_INTERVAL = 5000 // ms
 class DaemonLambda {
 
     private lambdaClient: Lambda
@@ -22,7 +25,12 @@ class DaemonLambda {
         const cloud: SimpleCloudComponents = await builder.createCloud(this.uuid)
 
         // Wrap in a controller
-        const controller = new SimpleCloudController(cloud)
+        const controller = new SimpleCloudController(
+            cloud,
+            new AlwaysOnePolicy(),
+            new PerformanceMonitor(cloud),
+            SCHEDULING_INTERVAL
+        )
 
         controller.start()
 

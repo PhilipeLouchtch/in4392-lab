@@ -1,11 +1,13 @@
 import { Lambda } from 'aws-sdk';
+import { MakesSnapshot } from '../monitoring/MakesSnapshot'
+import { LambdaSnapshot } from '../monitoring/LambdaSnapshot'
 
 /**
  * The LambdaController ensures that the desired amount of workers run
  * concurrently. The user can control the number of workers by means
  * of a goal.
  */
-export class LambdaController<T extends Object> {
+export class LambdaController<T extends Object> implements MakesSnapshot {
     private deps: T
     private lambdaClient: Lambda
     private name: string
@@ -40,6 +42,10 @@ export class LambdaController<T extends Object> {
                 }
             })
         })
+    }
+
+    async snapshot(): Promise<LambdaSnapshot> {
+        return new LambdaSnapshot(this.goal) // FIXME should be actual count
     }
 
 }
