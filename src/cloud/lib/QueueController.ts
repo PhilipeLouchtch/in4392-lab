@@ -10,7 +10,7 @@ export class QueueController {
         this.name = name
     }
 
-    public async create() {
+    public create() {
         return new Promise<string>((resolve, reject) => {
             this.sqsClient.createQueue({ QueueName: name }, (err, data) => {
                 if (err) {
