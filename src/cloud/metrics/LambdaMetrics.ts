@@ -1,10 +1,10 @@
-import { Snapshot } from "./Snapshot"
+import { MetricsBag } from './MetricsBag'
 
 /**
  * A LambdaSnapshot gathers the number of concurrently
  * running lambdas.
  */
-export class LambdaSnapshot implements Snapshot {
+export class LambdaMetrics implements MetricsBag {
 
     /** The number of concurrently running lambdas */
     private count: number

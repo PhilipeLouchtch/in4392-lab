@@ -1,4 +1,4 @@
-import { Snapshot } from "./Snapshot"
+import { MetricsBag } from './MetricsBag'
 
 /**
  * A snapshot of Queue Metrics. 
@@ -7,7 +7,7 @@ import { Snapshot } from "./Snapshot"
  * Gathering metrics via CloudWatch can only be done on a
  * 1-minute resolution.
  */
-export class QueueSnapshot implements Snapshot {
+export class QueueMetrics implements MetricsBag {
 
     /** The approximate number of messages in the queue */
     private approximateMessageCount: number
