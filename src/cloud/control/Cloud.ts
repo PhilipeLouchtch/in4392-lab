@@ -12,6 +12,6 @@ export interface Cloud {
     /** 
      * Kill the cloud
      */
-    kill(): Promise<any>
+    terminate(): Promise<any>
 
 }

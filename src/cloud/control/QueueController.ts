@@ -6,7 +6,7 @@ import { HasMetrics } from '../metrics/HasMetrics'
  * A `QueueController` controls the `SQSQueue` by spawning it.
  * For monitoring and scheduling, it can return `QueueMetrics`.
  */
-export class QueueController implements HasMetrics {
+export class QueueController implements HasMetrics<QueueMetrics> {
 
     private sqsClient: SQS
     private name: string

@@ -7,14 +7,14 @@ import { MetricsBag } from './MetricsBag'
 export class LambdaMetrics implements MetricsBag {
 
     /** The number of concurrently running lambdas */
-    private count: number
+    private numberOfActiveLambdas: number
 
     constructor(count: number) {
-        this.count = count;
+        this.numberOfActiveLambdas = count;
     }
 
-    getCount() {
-        return this.count
+    getNumberOfActiveLambdas() {
+        return this.numberOfActiveLambdas
     }
 
 }

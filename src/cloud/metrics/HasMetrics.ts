@@ -4,8 +4,8 @@ import { MetricsBag } from './MetricsBag'
  * Cloud Component Controllers should monitor themselves and return a
  * metrics of their performance when requested
  */
-export interface HasMetrics {
+export interface HasMetrics<T extends MetricsBag> {
 
-    getMetrics(): Promise<MetricsBag>
+    getMetrics(): Promise<T>
 
 }

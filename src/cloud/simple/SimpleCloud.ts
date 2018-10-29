@@ -42,7 +42,7 @@ export class SimpleCloud implements Cloud {
         ])
     }
 
-    public async kill(): Promise<boolean> {
+    public async terminate(): Promise<boolean> {
         return false // TBD
     }
 

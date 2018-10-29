@@ -2,6 +2,7 @@ import { SQS, Lambda } from 'aws-sdk';
 import { CloudController } from '../cloud/control/CloudController'
 import { SimpleCloud } from '../cloud/simple/SimpleCloud';
 import { AlwaysOneStrategy } from '../cloud/simple/AlwaysOneStrategy';
+import { MilliSecondInterval } from '../lib/MillisecondInterval';
 
 const SCHEDULING_INTERVAL = 5000 // ms
 class DaemonLambda {
@@ -25,7 +26,7 @@ class DaemonLambda {
         const strategy = new AlwaysOneStrategy()
 
         // Wrap in a controller
-        const controller = new CloudController(cloud, strategy, SCHEDULING_INTERVAL)
+        const controller = new CloudController(cloud, strategy, new MilliSecondInterval(SCHEDULING_INTERVAL))
 
         controller.start()
 

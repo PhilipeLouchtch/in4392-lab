@@ -1,5 +1,7 @@
 import { Cloud } from './Cloud'
 import { SchedulingStrategy } from '../scheduling/SchedulingStrategy'
+import { Interval } from '../../lib/Interval';
+import { IntervalExecution } from '../../lib/IntervalExecution';
 
 /**
  * A `CloudController` takes a `Cloud` and a `SchedulingStrategy`. 
@@ -9,27 +11,23 @@ export class CloudController<T extends Cloud> {
 
     private cloud: T
     private strategy: SchedulingStrategy<T>
-    private intervalMs: number
+    private interval: Interval
 
-    constructor(cloud: T, strategy: SchedulingStrategy<T>, intervalMs: number) {
+    constructor(cloud: T, strategy: SchedulingStrategy<T>, interval: Interval) {
         this.cloud = cloud
         this.strategy = strategy
-        this.intervalMs = intervalMs
+        this.interval = interval
     }
 
-    start(): Promise<any> {
-        return this.cloud.spawn()
+    start(): Promise<IntervalExecution> {
+        return new Promise(resolve => {
+            this.cloud.spawn().then(() => resolve(this.interval.onEvery(this.tick)))
+        })
     }
 
     /** At a certain interval, adjust the schedule */
     async tick() {
         this.strategy.schedule(this.cloud)
-
-        this.afterTick()
-    }
-
-    afterTick() {
-        setTimeout(() => this.tick().then(this.afterTick), this.intervalMs)
     }
 
 }

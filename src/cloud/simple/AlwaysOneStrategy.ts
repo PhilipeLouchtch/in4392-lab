@@ -7,9 +7,9 @@ import { SimpleCloud } from './SimpleCloud'
 export class AlwaysOneStrategy implements SchedulingStrategy<SimpleCloud> {
 
     async schedule(cloud: SimpleCloud): Promise<void> {
-        cloud.feedLambda.setGoal(1)
-        cloud.stepOneLambda.setGoal(1)
-        cloud.reduceLambda.setGoal(1)
+        cloud.feedLambda.scaleUpUntil(1)
+        cloud.stepOneLambda.scaleUpUntil(1)
+        cloud.reduceLambda.scaleUpUntil(1)
     }
 
 }
