@@ -1,13 +1,17 @@
 import { Lambda } from 'aws-sdk';
-import { MakesSnapshot } from '../monitoring/MakesSnapshot'
-import { LambdaSnapshot } from '../monitoring/LambdaSnapshot'
+import { HasMetrics } from '../metrics/HasMetrics'
+import { LambdaMetrics } from '../metrics/LambdaMetrics'
 
 /**
- * The LambdaController ensures that the desired amount of workers run
- * concurrently. The user can control the number of workers by means
- * of a goal.
+ * A `LambdaController` controls the amount of "workers" by invoking the `Lambda` it represents.
+ * The amount of concurrent invocations is controlled by `LambdaController.setGoal(number)`.
+ * 
+ * Along with each invocation it passes the `Dependencies` which are the `QueueName`s
+ * of the `Queue`s this `Lambda` depends upon.
+ * 
+ * For monitoring and scheduling, it can return `LambdaMetrics`
  */
-export class LambdaController<T extends Object> implements MakesSnapshot {
+export class LambdaController<T extends Object> implements HasMetrics<LambdaMetrics> {
     private deps: T
     private lambdaClient: Lambda
     private name: string
@@ -20,19 +24,25 @@ export class LambdaController<T extends Object> implements MakesSnapshot {
         this.lambdaClient = lambdaClient
     }
 
-    /** Add workers when goal is not satisfied */
+
     run() {
         if (this.invocations.length < this.goal) {
-            this.invoke().then(() => this.run())
+            this.spawnWorker().then(() => this.run())
         }
     }
 
-    setGoal(goal: number) {
-        this.goal = goal
-        this.run()
+    /** Add workers until goal is satisfied */
+    async scaleUpUntil(numberOfWorkers: number) {
+        // Adjust the goal
+        this.goal = numberOfWorkers
+
+        // Spawn until goal reached
+        while (this.invocations < numberOfWorkers) {
+            await this.spawnWorker()
+        }
     }
 
-    private invoke() {
+    private spawnWorker() {
         return new Promise((resolve, reject) => {
             this.lambdaClient.invoke({ FunctionName: this.name, Payload: this.deps }, (err, data) => {
                 if (err) reject(err)
@@ -44,8 +54,8 @@ export class LambdaController<T extends Object> implements MakesSnapshot {
         })
     }
 
-    async snapshot(): Promise<LambdaSnapshot> {
-        return new LambdaSnapshot(this.goal) // FIXME should be actual count
+    async getMetrics(): Promise<LambdaMetrics> {
+        return new LambdaMetrics(this.invocations.length)
     }
 
 }

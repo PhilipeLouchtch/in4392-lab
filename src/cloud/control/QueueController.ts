@@ -1,11 +1,12 @@
-import { SQS } from 'aws-sdk';
-import { QueueSnapshot } from '../monitoring/QueueSnapshot'
-import { MakesSnapshot } from '../monitoring/MakesSnapshot'
+import { SQS } from 'aws-sdk'
+import { QueueMetrics } from '../metrics/QueueMetrics'
+import { HasMetrics } from '../metrics/HasMetrics'
 
 /**
- * The QueueController creates and monitors an instance of the queue
+ * A `QueueController` controls the `SQSQueue` by spawning it.
+ * For monitoring and scheduling, it can return `QueueMetrics`.
  */
-export class QueueController implements MakesSnapshot {
+export class QueueController implements HasMetrics<QueueMetrics> {
 
     private sqsClient: SQS
     private name: string
@@ -16,7 +17,7 @@ export class QueueController implements MakesSnapshot {
         this.name = name
     }
 
-    public create() {
+    public spawn() {
         return new Promise<string>((resolve, reject) => {
             this.sqsClient.createQueue({ QueueName: name }, (err, data) => {
                 if (err) {
@@ -35,8 +36,8 @@ export class QueueController implements MakesSnapshot {
         })
     }
 
-    async snapshot(): Promise<QueueSnapshot> {
-        return new QueueSnapshot(await this.getApproximateSize())
+    async getMetrics(): Promise<QueueMetrics> {
+        return new QueueMetrics(await this.getApproximateSize())
     }
 
     public async getApproximateSize() {

@@ -1,9 +1,8 @@
 import { SQS, Lambda } from 'aws-sdk';
-import { SimpleCloudComponents } from '../cloud/SimpleCloudComponents';
-import { SimpleCloudBuilder } from '../cloud/SimpleCloudBuilder'
-import { SimpleCloudController } from '../cloud/SimpleCloudController'
-import { AlwaysOnePolicy } from '../cloud/policies/AlwaysOnePolicy'
-import { PerformanceMonitor } from '../cloud/monitoring/PerformanceMonitor'
+import { CloudController } from '../cloud/control/CloudController'
+import { SimpleCloud } from '../cloud/simple/SimpleCloud';
+import { AlwaysOneStrategy } from '../cloud/simple/AlwaysOneStrategy';
+import { MilliSecondInterval } from '../lib/MillisecondInterval';
 
 const SCHEDULING_INTERVAL = 5000 // ms
 class DaemonLambda {
@@ -21,16 +20,13 @@ class DaemonLambda {
     async run() {
 
         // Create a cloud
-        const builder = new SimpleCloudBuilder(this.lambdaClient, this.sqsClient)
-        const cloud: SimpleCloudComponents = await builder.createCloud(this.uuid)
+        const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid)
+
+        // Pick a strategy
+        const strategy = new AlwaysOneStrategy()
 
         // Wrap in a controller
-        const controller = new SimpleCloudController(
-            cloud,
-            new AlwaysOnePolicy(),
-            new PerformanceMonitor(cloud),
-            SCHEDULING_INTERVAL
-        )
+        const controller = new CloudController(cloud, strategy, new MilliSecondInterval(SCHEDULING_INTERVAL))
 
         controller.start()
 
