@@ -1,6 +1,7 @@
 const path = require('path');
 const glob = require('glob');
-const packages = glob.sync('./packages/*');    
+
+const packages = glob.sync('./packages/*');
 
 const entries = packages.map(package => ({
     name: package.match(/[a-zA-Z\-\_0-9]+$/)[0],
