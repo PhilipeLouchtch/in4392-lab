@@ -18,7 +18,7 @@ function run () {
   # $2: Function name
   cd ./dist/$1 # required, otherwise folders /dist/test will end up in .zip
   zip -X -r ./deployment.zip *    
-  # aws lambda update-function-code --function-name $2 --zip-file fileb://deployment.zip
+  aws lambda update-function-code --function-name $2 --zip-file fileb://deployment.zip
   rm deployment.zip
 
 }
