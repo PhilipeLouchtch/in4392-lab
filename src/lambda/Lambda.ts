@@ -1,4 +1,4 @@
-import {ExecutionTime} from "./ExecutionTime";
+import {ExecutionTime} from "../lib/ExecutionTime";
 
 export abstract class Lambda {
 

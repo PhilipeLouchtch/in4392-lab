@@ -1,5 +1,5 @@
 import {Lambda} from "./Lambda";
-import {ExecutionTime} from "./ExecutionTime";
+import {ExecutionTime} from "../lib/ExecutionTime";
 
 /**
  * TODO:

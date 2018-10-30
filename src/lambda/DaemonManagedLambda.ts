@@ -1,5 +1,5 @@
 import {Lambda} from "./Lambda";
-import {ExecutionTime} from "./ExecutionTime";
+import {ExecutionTime} from "../lib/ExecutionTime";
 
 /**
  * The type of Lambda whose scaling is managed by the Daemon and has no state. Therefore,

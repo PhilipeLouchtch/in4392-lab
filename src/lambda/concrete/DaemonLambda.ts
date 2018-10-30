@@ -1,5 +1,5 @@
 import {TimeImmortalLambda} from "../TimeImmortalLambda";
-import {ExecutionTime} from "../ExecutionTime";
+import {ExecutionTime} from "../../lib/ExecutionTime";
 
 export class DaemonLambda extends TimeImmortalLambda {
     constructor(executionTime: ExecutionTime) {

@@ -1,8 +1,8 @@
 import {Source} from "../../source/Source";
 import {JobRequest} from "../../JobRequest";
 import {Message} from "../../source/Message";
-import {MomentBasedExecutionTime} from "../ExecutionTime";
-import {NumericSeconds, TimeUnit} from "../Seconds";
+import {MomentBasedExecutionTime} from "../../lib/ExecutionTime";
+import {NumericSeconds, TimeUnit} from "../../lib/Seconds";
 import {OneShotLambda} from "../OneShotLambda";
 import {StepOneQueue} from "../../queue/StepOneQueue";
 

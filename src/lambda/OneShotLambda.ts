@@ -1,5 +1,5 @@
 import {Lambda} from "./Lambda";
-import {ExecutionTime} from "./ExecutionTime";
+import {ExecutionTime} from "../lib/ExecutionTime";
 
 /**
  * Type of lambda that is (assumed) to not need to be re-spawned or needs to have its state managed.
