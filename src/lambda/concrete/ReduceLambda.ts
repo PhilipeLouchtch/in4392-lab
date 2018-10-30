@@ -1,8 +1,8 @@
-import {ReduceOperation} from "../operation/ReduceOperation";
-import {Queue} from "../queue/Queue";
-import {Message} from "../source/Message";
+import {ReduceOperation} from "../../operation/ReduceOperation";
+import {Queue} from "../../queue/Queue";
+import {Message} from "../../source/Message";
 
-export  abstract class ReduceLambda<T> {
+export class ReduceLambda<T> {
     constructor(private readonly queue: Queue<Message<string, T>>,
                 private readonly reduceOperation: ReduceOperation<T>) {
     }

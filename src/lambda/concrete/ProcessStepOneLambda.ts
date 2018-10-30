@@ -1,6 +1,6 @@
-import {StepOneQueue} from "../queue/StepOneQueue";
-import {StepTwoQueue} from "../queue/StepTwoQueue";
-import {RandomChance} from "../lib/RandomChance";
+import {StepOneQueue} from "../../queue/StepOneQueue";
+import {StepTwoQueue} from "../../queue/StepTwoQueue";
+import {RandomChance} from "../../lib/RandomChance";
 
 export class ProcessStepOneLambda {
 
