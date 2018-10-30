@@ -38,7 +38,7 @@ class DaemonLambda extends TimeImmortalLambda {
               operation is actually requested (see QueueUrlOrOfNewOrExisting)
 
     */
-    async initialize() {
+    async initAndStartCloudController() {
         // Create a cloud (setup queues, lambda, permissions)
         const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid)
 
@@ -49,15 +49,20 @@ class DaemonLambda extends TimeImmortalLambda {
         const controller = new CloudController(cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
 
         // launch processing for the request
-        this.cloudControllerExecution = controller.start()
+        return controller.start()
     }
 
     async implementation(): Promise<void> {
         if (!this.cloudControllerExecution) {
-            this.initialize();
+            this.cloudControllerExecution = this.initAndStartCloudController();
         }
 
         // TODO: prevent busy-waiting as this function will loop forever (externally)
+    }
+
+    protected continueExecution(): boolean {
+        // TODO: determine if job is done (there is a done-result in the persistence layer)
+        return true;
     }
 }
 

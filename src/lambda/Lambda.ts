@@ -13,17 +13,22 @@ export abstract class Lambda {
     }
 
     async run() {
-        // Note the if-else construction. If the timeout handler does not explicitly continues
-        // the loop (by using the supplied fn and chaining it by itself), the loop is exited.
+        // Note: if the timeout handler does not explicitly continues the loop,
+        // (by using the supplied fn and chaining it by itself), the loop is exited.
         if (this.nearingLambdaTimeout()) {
             return this.lambdaLifespanTimeoutHandler(this.implementation);
         }
-        else {
+
+        if (this.continueExecution()) {
             return this.implementation().then(this.run);
         }
+
+        return Promise.resolve();
     }
 
-    abstract async implementation(): Promise<void>;
+    protected abstract async implementation(): Promise<void>;
+
+    protected abstract continueExecution(): boolean;
 
     private nearingLambdaTimeout(): boolean {
         return this.executionTime.hasReachedThreshold();
