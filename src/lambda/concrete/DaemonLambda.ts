@@ -7,6 +7,7 @@ import {ExecutionTime} from "../../lib/ExecutionTime";
 import {IntervalExecution} from "../../lib/IntervalExecution";
 import {MilliSecondBasedTimeDuration, TimeUnit} from "../../lib/TimeDuration";
 import {TimeBasedInterval} from "../../lib/TimeBasedInterval";
+import {TimeDurationDelay} from "../../lib/TimeDurationDelay";
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
@@ -16,6 +17,7 @@ class DaemonLambda extends TimeImmortalLambda {
     private sqsClient: SQS
     private uuid: string
     private cloudControllerExecution?: Promise<IntervalExecution>
+    private delay: TimeDurationDelay;
 
     constructor(executionTime: ExecutionTime, sqsClient: SQS, lambdaClient: Lambda, uuid: string) {
         super(executionTime)
@@ -23,6 +25,7 @@ class DaemonLambda extends TimeImmortalLambda {
         this.lambdaClient = lambdaClient
         this.sqsClient = sqsClient
         this.uuid = uuid
+        this.delay = new TimeDurationDelay(new MilliSecondBasedTimeDuration(10, TimeUnit.seconds))
     }
 
     /*
@@ -57,7 +60,7 @@ class DaemonLambda extends TimeImmortalLambda {
             this.cloudControllerExecution = this.initAndStartCloudController();
         }
 
-        // TODO: prevent busy-waiting as this function will loop forever (externally)
+        return this.delay.delay();
     }
 
     protected continueExecution(): boolean {
