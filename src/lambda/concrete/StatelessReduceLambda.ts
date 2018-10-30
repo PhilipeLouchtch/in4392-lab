@@ -1,10 +1,18 @@
 import {ReduceOperation} from "../../operation/ReduceOperation";
 import {Queue} from "../../queue/Queue";
 import {Message} from "../../source/Message";
+import {DaemonManagedLambda} from "../DaemonManagedLambda";
+import {MomentBasedExecutionTime} from "../../lib/ExecutionTime";
+import {NumericSeconds, TimeUnit} from "../../lib/Seconds";
 
-export class ReduceLambda<T> {
+export class StatelessReduceLambda<T> extends DaemonManagedLambda {
     constructor(private readonly queue: Queue<Message<string, T>>,
                 private readonly reduceOperation: ReduceOperation<T>) {
+        super(new MomentBasedExecutionTime(new NumericSeconds(4, TimeUnit.minutes)))
+    }
+
+    async implementation(): Promise<void> {
+        return this.run();
     }
 
     async run() {
