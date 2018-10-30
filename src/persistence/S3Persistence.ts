@@ -19,7 +19,6 @@ export class S3Persistence<T> implements Persistence<T> {
                         return Promise.reject(value.$response.error)
                     }
                     else if (value.$response.data && value.$response.data.Body) {
-                        // TODO: test if this works...
                         return JSON.parse(value.$response.data.Body.toString())
                     }
                 }
