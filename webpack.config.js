@@ -1,10 +1,15 @@
 const path = require('path');
+const glob = require('glob');
+
+const packages = glob.sync('./packages/*');
+
+const entries = packages.map(package => ({
+    name: package.match(/[a-zA-Z\-\_0-9]+$/)[0],
+    entry: package + '/index.ts',
+}))
 
 module.exports = {
-    entry: {
-        daemon: './packages/daemon/index.ts',
-        datasource: './packages/data-source/index.ts',
-    },
+    entry: entries.reduce((o, e) => ({ ...o, [e.name]: e.entry }), {}),
     module: {
         rules: [
             {
@@ -18,7 +23,9 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js']
     },
     output: {
-        filename: '[name]-bundle.js',
-        path: path.resolve(__dirname, 'dist')
+        filename: '[name]/index.js',
+        path: path.resolve(__dirname, 'dist'),
+        library: '',
+        libraryTarget: 'commonjs',
     }
 };

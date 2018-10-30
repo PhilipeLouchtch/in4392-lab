@@ -1,24 +1,20 @@
-import SQS = require("aws-sdk/clients/sqs");
 import {Source} from "../../source/Source";
 import {JobRequest} from "../../JobRequest";
-import {SendMessageBatchResult} from "aws-sdk/clients/sqs";
-import {SqsQueue} from "../../lib/SqsQueue";
 import {Message} from "../../source/Message";
-import {AWSError} from "aws-sdk";
-import {Request} from "aws-sdk/lib/request"
 import {MomentBasedExecutionTime} from "../ExecutionTime";
 import {NumericSeconds, TimeUnit} from "../Seconds";
 import {OneShotLambda} from "../OneShotLambda";
+import {StepOneQueue} from "../../queue/StepOneQueue";
 
 export class FeedLambda extends OneShotLambda {
-    private datasourceQueue: SqsQueue<Message<string, string>>;
+    private queue: StepOneQueue;
     private source: Source<Message<string, string>>;
     private job: JobRequest;
 
-    constructor(sqs: SQS, source: Source<Message<string, string>>, job: JobRequest) {
+    constructor(queue: StepOneQueue, source: Source<Message<string, string>>, job: JobRequest) {
         super(new MomentBasedExecutionTime(new NumericSeconds(4, TimeUnit.minutes)));
 
-        this.datasourceQueue = new SqsQueue(sqs, "datasource");
+        this.queue = queue;
         this.source = source;
         this.job = job;
     }
@@ -28,10 +24,10 @@ export class FeedLambda extends OneShotLambda {
     async implementation() {
         let dataLimit = this.job.limit;
 
-        const promises: Promise<Request<SendMessageBatchResult, AWSError>>[] = [];
+        const promises: Promise<any>[] = [];
 
         for (let i = 0; i < dataLimit; i += 10) {
-            promises.push(this.datasourceQueue.sendBatched(this.source));
+            promises.push(this.queue.sendBatched(this.source));
         }
 
         return Promise.all(promises)

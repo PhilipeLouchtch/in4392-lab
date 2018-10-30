@@ -1,11 +1,18 @@
-export class JobRequest {
-    private readonly _limit: number;
+import {Keyable} from "./lib/Keyable";
 
-    constructor (limit: number) {
-        this._limit = limit;
+const crypto = require("crypto");
+
+export class JobRequest implements Keyable {
+    /**
+     * @param limit Max items that are to be processed as part of the job
+     * @param param Some parameter, like name of the job, or keyword... something to make it "less trivial" than just a limit
+     */
+    constructor (readonly limit: number, readonly param: string) {
     }
 
-    public get limit() : number {
-        return this._limit;
+    asKey(): string {
+        let hash = crypto.createHash("sha256");
+        let digest = hash.update(this.limit).update(this.param).digest("base64");
+        return digest;
     }
 }
