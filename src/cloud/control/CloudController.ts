@@ -20,9 +20,8 @@ export class CloudController<T extends Cloud> {
     }
 
     start(): Promise<IntervalExecution> {
-        return new Promise(resolve => {
-            this.cloud.spawn().then(() => resolve(this.interval.onEvery(this.tick)))
-        })
+        return this.cloud.spawn()
+                .then(() => this.interval.onEvery(this.tick))
     }
 
     /** At a certain interval, adjust the schedule */
