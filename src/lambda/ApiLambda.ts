@@ -1,18 +1,15 @@
-import { APIRequestPayload } from '../lib/APIRequestPayload';
+import { APIEventPayload } from '../api/types/APIEventPayload'
+import { Dispatcher } from '../api/Dispatcher'
+import { QueryParams } from '../api/types/QueryParams'
 
 class ApiLambda {
-    constructor() {
 
+    run(event: APIEventPayload<QueryParams>, context, callback) {
+        new Dispatcher().dispatch(event.queryStringParameters)
+            .then(r => callback(null, r))
+            .catch(callback)
     }
 
-    run(event: APIRequestPayload, context, callback) {
-        switch(event.path) {
-            case '/a':
-                return callback(null, { body: JSON.stringify({ x: 'A' }) })
-            case '/b':
-                return callback(null, { body: JSON.stringify({ x: 'B' }) })
-        }
-    }
 }
 
 export default ApiLambda
