@@ -27,19 +27,15 @@ export class QueueController implements HasMetrics<QueueMetrics> {
     }
 
     private async getApproximateSize() {
-        try {
-            const attrs = await this.sqsClient.getQueueAttributes({
-                QueueUrl: await this.queueUrl.promise(),
-                AttributeNames: ["ApproximateNumberOfMessages"]
-            }).promise()
+        const attrs = await this.sqsClient.getQueueAttributes({
+            QueueUrl: await this.queueUrl.promise(),
+            AttributeNames: ["ApproximateNumberOfMessages"]
+        }).promise()
 
-            if (attrs.Attributes)
-                return Number.parseInt(attrs.Attributes.ApproximateNumberOfMessages)
-            else
-                return 0
-        } catch (err) {
-            throw err
-        }
+        if (attrs.Attributes)
+            return Number.parseInt(attrs.Attributes.ApproximateNumberOfMessages)
+        else
+            return 0
     }
 
 }
