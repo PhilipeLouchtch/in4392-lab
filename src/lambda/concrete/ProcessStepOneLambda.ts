@@ -10,8 +10,16 @@ export class ProcessStepOneLambda {
     }
 
     async run() {
-        return this.stepOneQueue.receive(this.processMsg)
-            .then(() => this.run()); // loop?
+        let queueWasEmpty = false;
+        let emptyQueueHandler = () => new Promise(() => queueWasEmpty = true).then(() => {})
+
+        const receivePromise = this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
+
+        if (queueWasEmpty) {
+            return Promise.resolve();
+        }
+
+        return receivePromise.then(() => this.run());
     }
 
     private async processMsg(data: string) {
