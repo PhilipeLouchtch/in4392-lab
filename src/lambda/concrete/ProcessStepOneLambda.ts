@@ -1,17 +1,23 @@
 import {StepOneQueue} from "../../queue/StepOneQueue";
 import {StepTwoQueue} from "../../queue/StepTwoQueue";
 import {RandomChance} from "../../lib/RandomChance";
+import {DaemonManagedLambda} from "../DaemonManagedLambda";
+import {ExecutionTime} from "../../lib/ExecutionTime";
 
-export class ProcessStepOneLambda {
+export class ProcessStepOneLambda extends DaemonManagedLambda {
+    private queueIsEmpty: boolean;
 
-    constructor(private readonly stepOneQueue: StepOneQueue,
+    constructor(executionTime: ExecutionTime,
+                private readonly stepOneQueue: StepOneQueue,
                 private readonly stepTwoQueue: StepTwoQueue,
                 private readonly chance: RandomChance) {
+        super(executionTime);
+        this.queueIsEmpty = false;
     }
 
     async run() {
         let queueWasEmpty = false;
-        let emptyQueueHandler = () => new Promise(() => queueWasEmpty = true).then(() => {})
+        let emptyQueueHandler = () => new Promise(() => this.queueIsEmpty = true).then(() => {})
 
         const receivePromise = this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
 
@@ -31,5 +37,14 @@ export class ProcessStepOneLambda {
         }
 
         return Promise.resolve();
+    }
+
+    async implementation(): Promise<void> {
+        return this.run();
+    }
+
+    protected continueExecution(): boolean {
+        // continue if we're not aware of queue being empty yet
+        return this.queueIsEmpty == false;
     }
 }
