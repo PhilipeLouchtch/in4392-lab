@@ -2,12 +2,14 @@ import {Lambda, SQS} from 'aws-sdk';
 import {CloudController} from '../../cloud/control/CloudController'
 import {SimpleCloud} from '../../cloud/simple/SimpleCloud';
 import {AlwaysOneStrategy} from '../../cloud/simple/AlwaysOneStrategy';
-import {MilliSecondInterval} from '../../lib/MilliSecondInterval';
 import {TimeImmortalLambda} from "../TimeImmortalLambda";
 import {ExecutionTime} from "../../lib/ExecutionTime";
 import {IntervalExecution} from "../../lib/IntervalExecution";
+import {MilliSecondBasedTimeDuration, TimeUnit} from "../../lib/TimeDuration";
+import {TimeBasedInterval} from "../../lib/TimeBasedInterval";
 
-const SCHEDULING_INTERVAL = 5000 // ms
+const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
+
 class DaemonLambda extends TimeImmortalLambda {
 
     private lambdaClient: Lambda
@@ -44,7 +46,7 @@ class DaemonLambda extends TimeImmortalLambda {
         const strategy = new AlwaysOneStrategy()
 
         // Wrap in a controller
-        const controller = new CloudController(cloud, strategy, new MilliSecondInterval(SCHEDULING_INTERVAL))
+        const controller = new CloudController(cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
 
         // launch processing for the request
         this.cloudControllerExecution = controller.start()

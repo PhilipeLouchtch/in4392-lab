@@ -2,7 +2,7 @@ import {Source} from "../../source/Source";
 import {JobRequest} from "../../JobRequest";
 import {Message} from "../../source/Message";
 import {MomentBasedExecutionTime} from "../../lib/ExecutionTime";
-import {NumericSeconds, TimeUnit} from "../../lib/Seconds";
+import {MilliSecondBasedTimeDuration, TimeUnit} from "../../lib/TimeDuration";
 import {OneShotLambda} from "../OneShotLambda";
 import {StepOneQueue} from "../../queue/StepOneQueue";
 
@@ -12,7 +12,7 @@ export class FeedLambda extends OneShotLambda {
     private job: JobRequest;
 
     constructor(queue: StepOneQueue, source: Source<Message<string, string>>, job: JobRequest) {
-        super(new MomentBasedExecutionTime(new NumericSeconds(4, TimeUnit.minutes)));
+        super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
 
         this.queue = queue;
         this.source = source;
