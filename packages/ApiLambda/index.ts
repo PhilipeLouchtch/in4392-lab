@@ -1,5 +1,8 @@
 import ApiLambda from "../../src/lambda/ApiLambda"
+import AWS = require('aws-sdk')
 
-const lambda = new ApiLambda();
-
-exports.handler = (event, context, callback) => lambda.run(event, context, callback)
+exports.handler = (event, context, callback) => {
+    const s3Client = new AWS.S3()
+    const lambda = new ApiLambda(s3Client)
+    lambda.run(event, context, callback)
+}
