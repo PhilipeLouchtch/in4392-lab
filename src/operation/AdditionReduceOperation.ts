@@ -1,6 +1,6 @@
 import {ReduceOperation} from "./ReduceOperation";
 
-export class AdditionReduceOperation implements ReduceOperation<string, string> {
+export class AdditionReduceOperation implements ReduceOperation<string> {
     constructor(private readonly convert: (string) => number) {
     }
 
