@@ -23,7 +23,7 @@ export class CloudController<T extends Cloud> {
         return this.cloud.spawn()
                 .then(() => {
                     this.tick()
-                    return this.interval.onEvery(this.tick)
+                    return this.interval.onEvery(this.tick.bind(this))
                 })
     }
 
