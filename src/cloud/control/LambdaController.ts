@@ -15,7 +15,7 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
     private deps: T
     private lambdaClient: Lambda
     private name: string
-    private invocations: any = []
+    private invocations: any[] = []
     private goal = 0
 
     constructor(lambdaClient: Lambda, lambdaName: string, dependencies: T) {
@@ -37,7 +37,7 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
         this.goal = numberOfWorkers
 
         // Spawn until goal reached
-        while (this.invocations < numberOfWorkers) {
+        while (this.invocations.length < numberOfWorkers) {
             await this.spawnWorker()
         }
     }
