@@ -16,14 +16,28 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
 
     public async sendSingle(msg: TMessage) {
         return this.queueUrl.promise().then(queueUrl => {
-            this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data })
+            console.log(`SQSQueue: send message ${msg.identifier} to ${queueUrl}`)
+            this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data }).promise()
+            .then((d) => {
+                console.log(`SQSQueue: send successful`, d)
+            }).catch((e) => {
+                console.error(`SQSQueue: send failed`, e)
+            })
         })
     }
 
     // Will create a maximum sized batch or until the provider is depleted
     public async sendBatched(msgProvider: Iterator<TMessage>) {
         return this.makeSqsBatch(msgProvider)
-            .then(sendMsgBatchRequest => this.sqsClient.sendMessageBatch(sendMsgBatchRequest))
+            .then(sendMsgBatchRequest => {
+                console.log(`SQSQueue: send ${sendMsgBatchRequest.Entries.length} messages to ${sendMsgBatchRequest.QueueUrl}`)
+                return this.sqsClient.sendMessageBatch(sendMsgBatchRequest).promise() // needs promise?
+                .then((d) => {
+                    console.log(`SQSQueue: send successful`, d)
+                }).catch((e) => {
+                    console.error(`SQSQueue: send failed`, e)
+                })
+            })
             .then(() => { }); // conform to the interface
     }
 
@@ -64,20 +78,6 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
             )).then(() => { }); // conform to the interface
     }
 
-    public async getApproximateSize() {
-        try {
-            const attrs = await this.sqsClient.getQueueAttributes({
-                QueueUrl: await this.queueUrl.promise(),
-                AttributeNames: ["ApproximateNumberOfMessages"]
-            }).promise()
-
-            if (attrs.Attributes)
-                return attrs.Attributes.ApproximateNumberOfMessages
-        } catch (err) {
-            throw err
-        }
-    }
-
     private async makeSqsBatch(source: Iterator<TMessage>): Promise<SendMessageBatchRequest> {
         return new Promise<SendMessageBatchRequest>(async resolve => {
             let msgs: SendMessageBatchRequestEntry[] = [];
@@ -90,18 +90,5 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
 
             resolve({ QueueUrl: await this.queueUrl.promise(), Entries: msgs });
         });
-    }
-
-    // Resolve the given queue-name to a sqs queue url. The name is used as a prefix filter for all the available queues.
-    private async resolveNameToUrl(queueName: string): Promise<string> {
-        return this.sqsClient.listQueues({ QueueNamePrefix: queueName }).promise()
-            .then(value => {
-                if (value.QueueUrls && value.QueueUrls[0]) {
-                    return value.QueueUrls[0];
-                }
-
-                // No permissions, or no queues with given prefix exists
-                throw new Error(`No queue found with prefix ${queueName}`);
-            });
     }
 }
