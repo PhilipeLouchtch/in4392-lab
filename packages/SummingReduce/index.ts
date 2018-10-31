@@ -1,8 +1,8 @@
 import { SummingReduceLambda } from "../../src/lambda/concrete/SummingReduceLambda"
 import SQS = require("aws-sdk/clients/sqs")
 import { SqsQueue } from '../../src/queue/SqsQueue';
-import { QueueUrlFromPrefix } from '../../src/queue/model/QueueUrlFromPrefix';
 import { OneDeps } from '../../src/cloud/simple/LambdaDependencies';
+import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -12,7 +12,7 @@ export const handler = (event, context, callback) => {
 
     try {
         const payload: OneDeps = event
-        const stepTwoQueue = new SqsQueue(sqsClient, new QueueUrlFromPrefix(payload.step_two, sqsClient))
+        const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_two, sqsClient))
         const lambda = new SummingReduceLambda(stepTwoQueue)
         
         lambda.run();
