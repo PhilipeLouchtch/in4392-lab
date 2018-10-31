@@ -15,11 +15,7 @@ export class StatelessReduceLambda<T> extends DaemonManagedLambda {
         this.probablyDone = false;
     }
 
-    async implementation(): Promise<void> {
-        return this.run();
-    }
-
-    async run() {
+    async implementation() {
         // todo: fix when only one msg
         return this.queue.receive(msgOne => {
                 return this.queue.receive(msgTwo => {
