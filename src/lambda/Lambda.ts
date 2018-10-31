@@ -1,5 +1,9 @@
 import {ExecutionTime} from "../lib/ExecutionTime";
 
+function sealed(target, key,descriptor) {
+    descriptor.writable = false; // Prevent method to be overriden
+}
+
 export abstract class Lambda {
 
     /**
@@ -12,6 +16,7 @@ export abstract class Lambda {
                 private readonly executionTime: ExecutionTime) {
     }
 
+    @sealed
     async run() {
         // Note: if the timeout handler does not explicitly continues the loop,
         // (by using the supplied fn and chaining it by itself), the loop is exited.
