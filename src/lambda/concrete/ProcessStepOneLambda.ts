@@ -19,7 +19,7 @@ export class ProcessStepOneLambda extends DaemonManagedLambda {
         let queueWasEmpty = false;
         let emptyQueueHandler = () => new Promise(() => this.queueIsEmpty = true).then(() => {})
 
-        const receivePromise = this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
+        const receivePromise = this.stepOneQueue.receive(this.processMsg.bind(this), emptyQueueHandler);
 
         if (queueWasEmpty) {
             return Promise.resolve();
