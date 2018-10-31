@@ -43,10 +43,14 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
     }
 
     private spawnWorker() {
+        console.log(`LambdaController(${this.name}): spawning..`)
         return new Promise((resolve, reject) => {
-            this.lambdaClient.invoke({ FunctionName: this.name, Payload: this.deps }, (err, data) => {
-                if (err) reject(err)
-                else {
+            this.lambdaClient.invoke({ FunctionName: this.name, Payload: JSON.stringify(this.deps) }, (err, data) => {
+                if (err) {
+                    console.error(`LambdaController(${this.name}): could not invoke.`, err)
+                    reject(err)
+                } else {
+                    console.log(`LambdaController(${this.name}): successfully invoked.`)
                     this.invocations.push(data)
                     resolve(data)
                 }
