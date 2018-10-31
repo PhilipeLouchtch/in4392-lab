@@ -42,6 +42,8 @@ class DaemonLambda extends TimeImmortalLambda {
 
     */
     async initAndStartCloudController() {
+        console.log("Daemon: Starting Cloud")
+
         // Create a cloud (setup queues, lambda, permissions)
         const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid)
 

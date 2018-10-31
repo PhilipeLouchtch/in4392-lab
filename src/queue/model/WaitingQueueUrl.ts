@@ -3,6 +3,7 @@ import SQS = require("aws-sdk/clients/sqs");
 import {TimeDurationDelay} from "../../lib/TimeDurationDelay";
 import {QueueUrlFromPrefix} from "./QueueUrlFromPrefix";
 import {MilliSecondBasedTimeDuration, TimeDuration, TimeUnit} from "../../lib/TimeDuration";
+import { Delay } from '../../lib/Delay';
 
 export class WaitingQueueUrl implements QueueUrl {
     private waitTime: TimeDuration;
@@ -14,13 +15,18 @@ export class WaitingQueueUrl implements QueueUrl {
     }
 
     promise(): Promise<string> {
-        return this.queueUrlFromPrefix.promise()
-            .catch(() => {
-                console.log(`Could not find queue for prefix ${this.prefix}, retrying in ${this.waitTime}`);
-                // try again after waiting 1 sec
-                return new TimeDurationDelay(this.waitTime).delay()
-                    .then(this.promise);
-            });
+        // Resolve only when the QueueUrl has been provided. No max tries?
+        return new Promise((resolve, reject) => {
+            return this.queueUrlFromPrefix.promise()
+                .then((queueUrl) => resolve(queueUrl)) // resolve when found
+                .catch(() => {
+                    console.log(`Could not find queue for prefix ${this.prefix}, retrying in ${this.waitTime.toMilliSeconds() } ms`);
+
+                    // try again after waiting 1 sec
+                    return new TimeDurationDelay(this.waitTime).delay()
+                        .then(() => this.promise().then((queueUrl) => resolve(queueUrl)));
+                });
+        })
     }
 
 }

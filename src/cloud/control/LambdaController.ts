@@ -15,7 +15,8 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
     private deps: T
     private lambdaClient: Lambda
     private name: string
-    private invocations: any = []
+    private invocations: any[] = []
+    private pending: number = 0
     private goal = 0
 
     constructor(lambdaClient: Lambda, lambdaName: string, dependencies: T) {
@@ -37,19 +38,25 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
         this.goal = numberOfWorkers
 
         // Spawn until goal reached
-        while (this.invocations < numberOfWorkers) {
+        while (this.invocations.length + this.pending < numberOfWorkers) {
             await this.spawnWorker()
         }
     }
 
     private spawnWorker() {
+        this.pending++
+        console.log(`LambdaController(${this.name}): spawning..`)
         return new Promise((resolve, reject) => {
-            this.lambdaClient.invoke({ FunctionName: this.name, Payload: this.deps }, (err, data) => {
-                if (err) reject(err)
-                else {
+            this.lambdaClient.invoke({ FunctionName: this.name, Payload: JSON.stringify(this.deps) }, (err, data) => {
+                if (err) {
+                    console.error(`LambdaController(${this.name}): could not invoke.`, err)
+                    reject(err)
+                } else {
+                    console.log(`LambdaController(${this.name}): successfully invoked.`)
                     this.invocations.push(data)
                     resolve(data)
                 }
+                this.pending--
             })
         })
     }

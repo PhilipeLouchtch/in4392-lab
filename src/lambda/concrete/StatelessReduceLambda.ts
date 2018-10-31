@@ -37,6 +37,6 @@ export class StatelessReduceLambda<T> extends DaemonManagedLambda {
     }
 
     protected continueExecution(): boolean {
-        return this.probablyDone;
+        return !this.probablyDone;
     }
 }

@@ -25,7 +25,7 @@ export abstract class Lambda {
         }
 
         if (this.continueExecution()) {
-            return this.implementation().then(this.run);
+            return this.implementation().then(this.run.bind(this));
         }
 
         return Promise.resolve();

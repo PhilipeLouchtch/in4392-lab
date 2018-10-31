@@ -3,6 +3,7 @@ import {StepTwoQueue} from "../../queue/StepTwoQueue";
 import {RandomChance} from "../../lib/RandomChance";
 import {DaemonManagedLambda} from "../DaemonManagedLambda";
 import {ExecutionTime} from "../../lib/ExecutionTime";
+import uuidv4 = require("uuid/v4")
 
 export class ProcessStepOneLambda extends DaemonManagedLambda {
     private queueIsEmpty: boolean;
@@ -19,15 +20,18 @@ export class ProcessStepOneLambda extends DaemonManagedLambda {
         let emptyQueueHandler = () => new Promise(() => this.queueIsEmpty = true)
             .then(() => {});
 
-        return this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
+        return this.stepOneQueue.receive(this.processMsg.bind(this), emptyQueueHandler);
     }
 
     private async processMsg(data: string) {
+        console.log("Processing message:" ,data) 
         // pretend to be a filter operation, allow random msgs to pass
-        if (this.chance.ofPercent(50)) {
+        if (this.chance.ofPercent(80)) {
+            const id = uuidv4()
+            console.log("Passed filter with id ", id)
             // naive, single-msg implementation. If optimization needed,
             // can rewrite into a Source implementation for batching
-            return this.stepTwoQueue.sendSingle({identifier: "", data: data});
+            return this.stepTwoQueue.sendSingle({identifier: id, data: data});
         }
 
         return Promise.resolve();
