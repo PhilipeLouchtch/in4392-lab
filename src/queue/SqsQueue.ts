@@ -16,14 +16,28 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
 
     public async sendSingle(msg: TMessage) {
         return this.queueUrl.promise().then(queueUrl => {
-            this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data })
+            console.log(`SQSQueue: send message ${msg.identifier} to ${queueUrl}`)
+            this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data }).promise()
+            .then((d) => {
+                console.log(`SQSQueue: send successful`, d)
+            }).catch((e) => {
+                console.error(`SQSQueue: send failed`, e)
+            })
         })
     }
 
     // Will create a maximum sized batch or until the provider is depleted
     public async sendBatched(msgProvider: Iterator<TMessage>) {
         return this.makeSqsBatch(msgProvider)
-            .then(sendMsgBatchRequest => this.sqsClient.sendMessageBatch(sendMsgBatchRequest))
+            .then(sendMsgBatchRequest => {
+                console.log(`SQSQueue: send ${sendMsgBatchRequest.Entries.length} messages to ${sendMsgBatchRequest.QueueUrl}`)
+                return this.sqsClient.sendMessageBatch(sendMsgBatchRequest).promise() // needs promise?
+                .then((d) => {
+                    console.log(`SQSQueue: send successful`, d)
+                }).catch((e) => {
+                    console.error(`SQSQueue: send failed`, e)
+                })
+            })
             .then(() => { }); // conform to the interface
     }
 
