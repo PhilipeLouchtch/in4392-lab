@@ -15,17 +15,11 @@ export class ProcessStepOneLambda extends DaemonManagedLambda {
         this.queueIsEmpty = false;
     }
 
-    async run() {
-        let queueWasEmpty = false;
-        let emptyQueueHandler = () => new Promise(() => this.queueIsEmpty = true).then(() => {})
+    async implementation() {
+        let emptyQueueHandler = () => new Promise(() => this.queueIsEmpty = true)
+            .then(() => {});
 
-        const receivePromise = this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
-
-        if (queueWasEmpty) {
-            return Promise.resolve();
-        }
-
-        return receivePromise.then(() => this.run());
+        return this.stepOneQueue.receive(this.processMsg, emptyQueueHandler);
     }
 
     private async processMsg(data: string) {
@@ -37,10 +31,6 @@ export class ProcessStepOneLambda extends DaemonManagedLambda {
         }
 
         return Promise.resolve();
-    }
-
-    async implementation(): Promise<void> {
-        return this.run();
     }
 
     protected continueExecution(): boolean {
