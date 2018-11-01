@@ -72,6 +72,7 @@ class DaemonLambda extends TimeImmortalLambda {
             this.cloudControllerExecution = this.initAndStartCloudController();
         }
         
+        // Mark as done when the job is completed
         this.persistence.read(this.job).then((jobData: JobResult<SimpleJobResult> | undefined) => {
             this.done = !!jobData && jobData.status === JobStatus.COMPLETED
         })
@@ -80,8 +81,7 @@ class DaemonLambda extends TimeImmortalLambda {
     }
 
     protected continueExecution(): boolean {
-        // TODO: determine if job is done (there is a done-result in the persistence layer)
-        return true;
+        return !this.done;
     }
 }
 
