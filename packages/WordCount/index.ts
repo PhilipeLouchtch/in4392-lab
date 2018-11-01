@@ -1,19 +1,31 @@
-import {SqsQueue} from '../../src/queue/SqsQueue';
-import {WordCountDeps} from '../../src/cloud/simple/LambdaDependencies';
-import {RandomChance} from '../../src/lib/RandomChance';
-import {MomentBasedExecutionTime} from '../../src/lib/ExecutionTime';
-import {MilliSecondBasedTimeDuration, TimeUnit} from '../../src/lib/TimeDuration';
-import {WaitingQueueUrl} from '../../src/queue/model/WaitingQueueUrl';
-import {WordCountLambda} from "../../src/lambda/concrete/WordCountLambda";
+import { SqsQueue } from '../../src/queue/SqsQueue';
+import { WordCountDeps } from '../../src/cloud/simple/LambdaDependencies';
+import { MomentBasedExecutionTime } from '../../src/lib/ExecutionTime';
+import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
+import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
+import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
-export const handler = (event, context, callback) => {
-    console.log("Event", event)
-    console.log("Context", context)
+const validate = (event) =>
+    !('input_queue' in event) ? "'input_queue' is a required Payload parameter"
+        : !('output_queue' in event) ? "'output_queue' is a required Payload parameter"
+            : !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
+                : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
+                    : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
+                        : null
 
+export const handler = (event, context, callback) => {
     try {
+        console.log("WordCount: Invoked")
+
+        const error = validate(event)
+        if (error) {
+            return callback(error)
+        }
+
+
         const payload: WordCountDeps = event
 
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
@@ -21,9 +33,9 @@ export const handler = (event, context, callback) => {
         const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
         const lambda = new WordCountLambda(executionTime, inputQueue, outputQueue)
-        
+
         lambda.run();
-        
+
         callback(null, { statusCode: 200, body: { message: "ok" } })
     } catch (error) {
         console.error(error)
