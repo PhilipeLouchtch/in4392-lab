@@ -5,8 +5,8 @@ import { SqsQueue } from '../../src/queue/SqsQueue';
 import { OneDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { S3Persistence } from '../../src/persistence/S3Persistence';
-import { SimpleJobParams, SimpleJobRequest, SimpleJobResult } from '../job/SimpleJobRequest';
-import { JobResult } from '../job/JobResult';
+import { SimpleJobParams, SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
+import { JobResult } from '../../src/job/JobResult';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })

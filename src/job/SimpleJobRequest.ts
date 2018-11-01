@@ -15,7 +15,7 @@ export class SimpleJobRequest extends JobRequest<SimpleJobParams> {
 
     asKey(): string {
         let hash = crypto.createHash("sha256");
-        let digest = hash.update(this.parameters.limit).update(this.parameters.param).digest("base64");
+        let digest = hash.update(this.parameters.limit.toString()).update(this.parameters.param).digest("base64");
         return digest;
     }
 

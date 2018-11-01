@@ -4,7 +4,7 @@ import { SqsQueue } from '../../src/queue/SqsQueue';
 import { SimpleSource } from '../../src/source/SimpleSource';
 import { FeedDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
-import { SimpleJobRequest } from '../job/SimpleJobRequest';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
