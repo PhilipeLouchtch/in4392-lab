@@ -9,7 +9,7 @@ import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 const sqsClient = new SQS({ region: 'us-west-2' })
 
 const validate = (event) =>
-    !('step_one' in event) ? "'step_one' is a required Payload parameter"
+    !('output_queue' in event) ? "'output_queue' is a required Payload parameter"
         : !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
             : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
                 : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
@@ -25,7 +25,7 @@ export const handler = (event, context, callback) => {
         }
 
         const payload: FeedDeps = event
-        const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
+        const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
         const source = new SimpleSource(event.JobRequest.param)
         const jobRequest = new SimpleJobRequest(event.JobRequest)
 
