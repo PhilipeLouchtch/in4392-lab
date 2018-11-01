@@ -12,13 +12,16 @@ export class QueueController implements HasMetrics<QueueMetrics> {
 
     private sqsClient: SQS
     private queueUrl: QueueUrl
+    private name: string
 
     constructor(sqsClient: SQS, name: string) {
         this.sqsClient = sqsClient
         this.queueUrl = new QueueUrlOfNewOrExisting(name, sqsClient)
+        this.name = name
     }
 
     public spawn() {
+        console.log(`QueueController(${this.name}): spawn`)
         return this.queueUrl.promise()
     }
 
