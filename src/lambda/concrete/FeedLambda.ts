@@ -1,19 +1,20 @@
 import {Source} from "../../source/Source";
-import {JobRequest} from "../../JobRequest";
+import {JobRequest} from "../../job/JobRequest";
 import {Message} from "../../source/Message";
 import {MomentBasedExecutionTime} from "../../lib/ExecutionTime";
 import {MilliSecondBasedTimeDuration, TimeUnit} from "../../lib/TimeDuration";
 import {OneShotLambda} from "../OneShotLambda";
 import {StepOneQueue} from "../../queue/StepOneQueue";
+import { SimpleJobRequest } from '../../job/SimpleJobRequest';
 
 export class FeedLambda extends OneShotLambda {
     private queue: StepOneQueue;
     private source: Source<Message<string, string>>;
-    private job: JobRequest;
+    private job: SimpleJobRequest;
 
     private isFirstRun: boolean;
 
-    constructor(queue: StepOneQueue, source: Source<Message<string, string>>, job: JobRequest) {
+    constructor(queue: StepOneQueue, source: Source<Message<string, string>>, job: SimpleJobRequest) {
         super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
 
         this.queue = queue;
@@ -27,7 +28,7 @@ export class FeedLambda extends OneShotLambda {
     // then will have to extend source with a checkpoint save/restore functionality
     async implementation() {
         this.isFirstRun = false;
-        let dataLimit = this.job.limit;
+        let dataLimit = this.job.parameters.limit;
 
         const promises: Promise<any>[] = [];
 

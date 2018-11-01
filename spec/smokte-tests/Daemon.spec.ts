@@ -1,5 +1,6 @@
 import "jasmine";
 import { handler } from "../../packages/Daemon/index"
+import { SimpleJobParams } from '../../src/job/SimpleJobRequest';
 
 describe("Daemon", function () {
 
@@ -13,8 +14,8 @@ describe("Daemon", function () {
     it("fires successfully", function (done) {
 
         const cb = console.log
-
-        const d = handler({ }, {}, cb)
+        const JobRequest: SimpleJobParams = { limit: 100, param: 'hello' }
+        const d = handler({ JobRequest }, {}, cb)
 
     })
 
