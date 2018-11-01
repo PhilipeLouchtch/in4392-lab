@@ -24,6 +24,7 @@ export const handler = async (event, context) => {
     if (!result) {
         const payload = { JobRequest: job.parameters }
         lambdaClient.invoke({ FunctionName: 'Daemon', Payload: JSON.stringify(payload) })
+            .promise()
         return { statusCode: 202, data: { message: "Job Started" } }
     } else {
         return { statusCode: 200, data: { result } }
