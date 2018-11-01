@@ -4,13 +4,19 @@ import { Message } from "../../source/Message";
 import { DaemonManagedLambda } from "../DaemonManagedLambda";
 import { MomentBasedExecutionTime } from "../../lib/ExecutionTime";
 import { MilliSecondBasedTimeDuration, TimeUnit } from "../../lib/TimeDuration";
+import { JobRequest } from '../../job/JobRequest';
+import { JobStatus } from '../../job/JobStatus';
+import { Persistence } from '../../persistence/Persistence';
+import { JobResult } from '../../job/JobResult';
 
 // Warning: this lambda does not scale!
-export class StatelessReduceLambda<T> extends DaemonManagedLambda {
+export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
     private probablyDone: boolean;
 
     constructor(private readonly queue: Queue<Message<string, T>>,
-        private readonly reduceOperation: ReduceOperation<T>) {
+        private readonly reduceOperation: ReduceOperation<T>,
+        private readonly job: JobRequest<P>,
+        private readonly persist: Persistence<JobResult<T>>) {
         super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
         this.probablyDone = false;
     }
@@ -27,7 +33,8 @@ export class StatelessReduceLambda<T> extends DaemonManagedLambda {
             },
                 () => {
                     // only one message was in queue -> done
-                    // TODO: write to persistence layer
+                    this.persist.store(this.job, { status: JobStatus.COMPLETED, data: msgOne })
+
                     console.log(`final result: ${msgOne}`);
                     this.probablyDone = true;
                     return Promise.resolve();

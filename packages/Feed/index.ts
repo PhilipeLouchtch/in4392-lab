@@ -2,9 +2,9 @@ import FeedLambda from "../../src/lambda/concrete/FeedLambda"
 import SQS = require("aws-sdk/clients/sqs")
 import { SqsQueue } from '../../src/queue/SqsQueue';
 import { SimpleSource } from '../../src/source/SimpleSource';
-import { JobRequest } from '../../src/JobRequest';
 import { FeedDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -16,7 +16,7 @@ export const handler = (event, context, callback) => {
         const payload: FeedDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
         const source = new SimpleSource("hello world") // TODO Parameterize
-        const jobRequest = new JobRequest(100, "hello") // TODO Parameterize
+        const jobRequest = new SimpleJobRequest({ limit: 100, param:  "hello"}) // TODO Parameterize
 
         const lambda = new FeedLambda(stepOneQueue, source, jobRequest)
         
