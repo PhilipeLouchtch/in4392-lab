@@ -33,7 +33,9 @@ export const handler = (event, context, callback) => {
 
         const job = new SimpleJobRequest(event.JobRequest)
         const lambda = new DaemonLambda(execTime, sqsClient, lambdaClient, job, persistence, uuidv4())
+
         lambda.run();
+
         callback(null, { statusCode: 200, body: { message: "ok" } })
     } catch (error) {
         callback({ error })

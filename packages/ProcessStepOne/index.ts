@@ -23,14 +23,13 @@ export const handler = (event, context, callback) => {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
 
         const payload: OneDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
         const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_two, sqsClient))
         const chance = new RandomChance(Math.random)
-        
-        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
-        const execTime = new ContextBasedExecutionTime(context, margin);
 
         const lambda = new ProcessStepOneLambda(execTime, stepOneQueue, stepTwoQueue, chance)
 
