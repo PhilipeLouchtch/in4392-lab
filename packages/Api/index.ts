@@ -18,11 +18,7 @@ const response = (statusCode: number, body: any, headers: any = {}) => ({
     "isBase64Encoded": false
 });
 
-const delay = (ms) => new Promise(r => setTimeout(r, ms))
-
 export const handler = async (event, context) => {
-    console.log("event", event)
-    console.log("context", context)
 
     // Try to decode the request body
     let body;
@@ -47,17 +43,16 @@ export const handler = async (event, context) => {
     const result = await persistence.read(job)
 
     if (!result) {
+        console.log("JobRequest not in storage, invoking Daemon..")
         const payload = { JobRequest: job.parameters }
-        console.log("Invoking..")
         const result = await lambdaClient.invoke({
             FunctionName: 'Daemon',
             InvocationType: "Event",
             Payload: JSON.stringify(payload),
         }).promise()
-        console.log("Invocation result: ", result)
-        console.log("Returning..")
         return response(202, { message: "Job Started" })
     } else {
+        console.log("JobRequest in storage, returning.")
         return response(200, { result })
     }
 }
