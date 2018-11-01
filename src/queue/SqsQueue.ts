@@ -19,7 +19,7 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
             console.log(`SQSQueue: send message ${msg.identifier} to ${queueUrl}`)
             this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data }).promise()
             .then((d) => {
-                console.log(`SQSQueue: send successful`, d)
+                console.log(`SQSQueue: send succeeded`, d)
             }).catch((e) => {
                 console.error(`SQSQueue: send failed`, e)
             })
@@ -33,7 +33,7 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
                 console.log(`SQSQueue: send ${sendMsgBatchRequest.Entries.length} messages to ${sendMsgBatchRequest.QueueUrl}`)
                 return this.sqsClient.sendMessageBatch(sendMsgBatchRequest).promise() // needs promise?
                 .then((d) => {
-                    console.log(`SQSQueue: send successful`, d)
+                    console.log(`SQSQueue: send succeeded`, d)
                 }).catch((e) => {
                     console.error(`SQSQueue: send failed`, e)
                 })
@@ -48,6 +48,7 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
         const msg = await this.sqsClient.receiveMessage({ QueueUrl: queueUrl, MaxNumberOfMessages: 1, WaitTimeSeconds: 10 }).promise();
 
         if (!msg.Messages || msg.Messages.length == 0) {
+            console.log(`SQSQueue: queue is empty`)
             return queueIsEmptyHandler();
         }
 
@@ -63,8 +64,10 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
         return Promise.all(messages
             .map(msg => this.queueUrl.promise().then(queueUrl => {
                 try {
+                    console.log(`SQSQueue: consuming message`)
                     msgConsumer(msg.data);
                     // remove msg from queue if processed successfully
+                    console.log(`SQSQueue: delete message from queue`)
                     return this.sqsClient.deleteMessage({
                         QueueUrl: queueUrl,
                         ReceiptHandle: msg.identifier

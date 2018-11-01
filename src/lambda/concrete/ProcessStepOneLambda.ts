@@ -24,11 +24,11 @@ export class ProcessStepOneLambda extends DaemonManagedLambda {
     }
 
     private async processMsg(data: string) {
-        console.log("Processing message:" ,data) 
+        console.log("ProcessStepOneLambda: Processing message:" ,data) 
         // pretend to be a filter operation, allow random msgs to pass
         if (this.chance.ofPercent(80)) {
             const id = uuidv4()
-            console.log("Passed filter with id ", id)
+            console.log("ProcessStepOneLambda: Passed filter with id ", id)
             // naive, single-msg implementation. If optimization needed,
             // can rewrite into a Source implementation for batching
             return this.stepTwoQueue.sendSingle({identifier: id, data: data});

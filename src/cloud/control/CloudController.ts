@@ -20,6 +20,7 @@ export class CloudController<T extends Cloud> {
     }
 
     start(): Promise<IntervalExecution> {
+        console.log('CloudController: start')
         return this.cloud.spawn()
                 .then(() => {
                     this.tick()
@@ -29,6 +30,7 @@ export class CloudController<T extends Cloud> {
 
     /** At a certain interval, adjust the schedule */
     async tick() {
+        console.log('CloudController: tick')
         this.strategy.schedule(this.cloud)
     }
 
