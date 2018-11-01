@@ -36,7 +36,7 @@ export class FeedLambda extends OneShotLambda {
             promises.push(this.queue.sendBatched(this.source));
         }
 
-        console.log(`FeedLambda: sending batches..`)
+        console.log(`FeedLambda: sending ${promises.length} batches..`)
 
         return Promise.all(promises)
             .then(() => {});

@@ -9,6 +9,7 @@ export type FeedDeps = {
 export type OneDeps = {
     step_one: string,
     step_two: string,
+    JobRequest: SimpleJobParams,
 }
 
 export type ReduceDeps = {

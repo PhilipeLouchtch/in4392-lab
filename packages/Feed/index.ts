@@ -26,8 +26,8 @@ export const handler = (event, context, callback) => {
 
         const payload: FeedDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
-        const source = new SimpleSource("hello world") // TODO Parameterize
-        const jobRequest = new SimpleJobRequest({ limit: 100, param:  "hello"}) // TODO Parameterize
+        const source = new SimpleSource(event.JobRequest.param)
+        const jobRequest = new SimpleJobRequest(event.JobRequest)
 
         const lambda = new FeedLambda(stepOneQueue, source, jobRequest)
 
