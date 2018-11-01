@@ -12,11 +12,22 @@ const sqsClient = new SQS({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })
 const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
 
-export const handler = (event, context, callback) => {
-    console.log("Event", event)
-    console.log("Context", context)
+const validate = (event) =>
+    !('step_two' in event) ? "'step_two' is a required Payload parameter"
+        : !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
+            : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
+                : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
+                    : null
 
+export const handler = (event, context, callback) => {
     try {
+        console.log("SummingReduce: Invoked")
+
+        const error = validate(event)
+        if (error) {
+            return callback(error)
+        }
+
         const payload: OneDeps = event
         const job = new SimpleJobRequest(event.JobRequest)
         const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_two, sqsClient))
@@ -27,6 +38,6 @@ export const handler = (event, context, callback) => {
         callback(null, { statusCode: 200, body: { message: "ok" } })
     } catch (error) {
         console.error(error)
-        callback(null, { statusCode: 500, body: { error } })
+        callback({ error })
     }
 }
