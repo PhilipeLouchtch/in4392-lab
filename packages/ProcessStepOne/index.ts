@@ -5,7 +5,7 @@ import { OneDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { RandomChance } from '../../src/lib/RandomChance';
 import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
-import { ContextBasedExecutionTime } from '../lib/ContextBasedExecutionTime';
+import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -27,8 +27,8 @@ export const handler = (event, context, callback) => {
         const execTime = new ContextBasedExecutionTime(context, margin);
 
         const payload: OneDeps = event
-        const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
-        const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_two, sqsClient))
+        const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
+        const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
         const chance = new RandomChance(Math.random)
 
         const lambda = new ProcessStepOneLambda(execTime, stepOneQueue, stepTwoQueue, chance)
