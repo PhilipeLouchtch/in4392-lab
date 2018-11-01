@@ -1,4 +1,4 @@
-import {QueueUrl} from "./QueueUrl";
+import { QueueUrl } from "./QueueUrl";
 import SQS = require("aws-sdk/clients/sqs");
 import {TimeDurationDelay} from "../../lib/TimeDurationDelay";
 import {QueueUrlFromName} from "./QueueUrlFromName";
@@ -24,7 +24,10 @@ export class WaitingQueueUrl implements QueueUrl {
 
                     // try again after waiting 1 sec
                     return new TimeDurationDelay(this.waitTime).delay()
-                        .then(() => this.promise().then((queueUrl) => resolve(queueUrl)));
+                        .then(() => this.promise().then((queueUrl) => {
+                            console.log("QURL: ", queueUrl)
+                            resolve(queueUrl)
+                        }));
                 });
         })
     }

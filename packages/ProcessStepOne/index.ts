@@ -9,11 +9,20 @@ import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
-export const handler = (event, context, callback) => {
-    console.log("Event", event)
-    console.log("Context", context)
+const validate = (event) =>
+    !('step_one' in event) ? "'step_one' is a required Payload parameter"
+        : !('step_two' in event) ? "'step_two' is a required Payload parameter"
+            : null
 
+export const handler = (event, context, callback) => {
     try {
+        console.log("ProcessStepOne: Invoked")
+
+        const error = validate(event)
+        if (error) {
+            return callback(error)
+        }
+
         const payload: OneDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
         const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_two, sqsClient))
@@ -21,12 +30,12 @@ export const handler = (event, context, callback) => {
         const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
         const lambda = new ProcessStepOneLambda(executionTime, stepOneQueue, stepTwoQueue, chance)
-        
+
         lambda.run();
-        
+
         callback(null, { statusCode: 200, body: { message: "ok" } })
     } catch (error) {
         console.error(error)
-        callback(null, { statusCode: 500, body: { error } })
+        callback({ error })
     }
 }
