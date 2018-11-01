@@ -21,10 +21,10 @@ export abstract class Lambda {
         console.log(`Lambda: run`)
         // Note: if the timeout handler does not explicitly continues the loop,
         // (by using the supplied fn and chaining it by itself), the loop is exited.
-        // if (this.nearingLambdaTimeout()) {
-        //     console.log(`Lambda: nearing timeout`)
-        //     return this.lambdaLifespanTimeoutHandler(this.implementation);
-        // }
+        if (this.nearingLambdaTimeout()) {
+            console.log(`Lambda: nearing timeout`)
+            return this.lambdaLifespanTimeoutHandler(this.implementation);
+        }
 
         if (this.continueExecution()) {
             console.log(`Lambda: continuing execution`)
