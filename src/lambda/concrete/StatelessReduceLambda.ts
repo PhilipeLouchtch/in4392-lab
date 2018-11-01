@@ -2,7 +2,7 @@ import { ReduceOperation } from "../../operation/ReduceOperation";
 import { Queue } from "../../queue/Queue";
 import { Message } from "../../source/Message";
 import { DaemonManagedLambda } from "../DaemonManagedLambda";
-import { MomentBasedExecutionTime } from "../../lib/ExecutionTime";
+import { ExecutionTime, MomentBasedExecutionTime } from "../../lib/ExecutionTime";
 import { MilliSecondBasedTimeDuration, TimeUnit } from "../../lib/TimeDuration";
 import { JobRequest } from '../../job/JobRequest';
 import { JobStatus } from '../../job/JobStatus';
@@ -13,10 +13,11 @@ import { JobResult } from '../../job/JobResult';
 export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
     private probablyDone: boolean;
 
-    constructor(private readonly queue: Queue<Message<string, T>>,
-        private readonly reduceOperation: ReduceOperation<T>,
-        private readonly job: JobRequest<P>,
-        private readonly persist: Persistence<JobResult<T>>) {
+    constructor(executionTime: ExecutionTime,
+                private readonly queue: Queue<Message<string, T>>,
+                private readonly reduceOperation: ReduceOperation<T>,
+                private readonly job: JobRequest<P>,
+                private readonly persist: Persistence<JobResult<T>>) {
         super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
         this.probablyDone = false;
     }

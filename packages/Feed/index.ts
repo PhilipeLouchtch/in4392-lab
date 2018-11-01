@@ -5,6 +5,8 @@ import { SimpleSource } from '../../src/source/SimpleSource';
 import { FeedDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
+import {ContextBasedExecutionTime} from "../../src/lib/ContextBasedExecutionTime";
+import {MilliSecondBasedTimeDuration, TimeUnit} from "../../src/lib/TimeDuration";
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -24,12 +26,15 @@ export const handler = (event, context, callback) => {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
+
         const payload: FeedDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.step_one, sqsClient))
         const source = new SimpleSource("hello world") // TODO Parameterize
         const jobRequest = new SimpleJobRequest({ limit: 100, param:  "hello"}) // TODO Parameterize
 
-        const lambda = new FeedLambda(stepOneQueue, source, jobRequest)
+        const lambda = new FeedLambda(execTime, stepOneQueue, source, jobRequest)
 
         lambda.run();
 

@@ -1,8 +1,6 @@
 import {Source} from "../../source/Source";
-import {JobRequest} from "../../job/JobRequest";
 import {Message} from "../../source/Message";
-import {MomentBasedExecutionTime} from "../../lib/ExecutionTime";
-import {MilliSecondBasedTimeDuration, TimeUnit} from "../../lib/TimeDuration";
+import {ExecutionTime} from "../../lib/ExecutionTime";
 import {OneShotLambda} from "../OneShotLambda";
 import {StepOneQueue} from "../../queue/StepOneQueue";
 import { SimpleJobRequest } from '../../job/SimpleJobRequest';
@@ -14,8 +12,8 @@ export class FeedLambda extends OneShotLambda {
 
     private isFirstRun: boolean;
 
-    constructor(queue: StepOneQueue, source: Source<Message<string, string>>, job: SimpleJobRequest) {
-        super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
+    constructor(executionTime: ExecutionTime, queue: StepOneQueue, source: Source<Message<string, string>>, job: SimpleJobRequest) {
+        super(executionTime);
 
         this.queue = queue;
         this.source = source;
