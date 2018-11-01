@@ -30,7 +30,7 @@ export const handler = (event, context, callback) => {
 
         const payload: ReduceDeps = event
         const job = new SimpleJobRequest(event.JobRequest)
-        const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
+        const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.in_out_queue, sqsClient))
         const lambda = new SummingReduceLambda<SimpleJobParams>(inputQueue, job, persistence)
         
         lambda.run();
