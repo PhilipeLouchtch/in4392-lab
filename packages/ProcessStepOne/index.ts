@@ -10,8 +10,8 @@ import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTi
 const sqsClient = new SQS({ region: 'us-west-2' })
 
 const validate = (event) =>
-    !('step_one' in event) ? "'step_one' is a required Payload parameter"
-        : !('step_two' in event) ? "'step_two' is a required Payload parameter"
+    !('input_queue' in event) ? "'input_queue' is a required Payload parameter"
+        : !('output_queue' in event) ? "'output_queue' is a required Payload parameter"
             : null
 
 export const handler = (event, context, callback) => {
