@@ -52,7 +52,7 @@ class DaemonLambda extends TimeImmortalLambda {
         console.log("Daemon: Starting Cloud")
 
         // Create a cloud (setup queues, lambda, permissions)
-        const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid)
+        const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid, this.job)
 
         // Select scheduling/scaling strategy
         const strategy = new AlwaysOneStrategy()
