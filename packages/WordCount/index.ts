@@ -17,7 +17,7 @@ export const handler = (event, context, callback) => {
         const payload: WordCountDeps = event
 
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
-        const outputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
+        const outputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
         const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
         const lambda = new WordCountLambda(executionTime, inputQueue, outputQueue)
