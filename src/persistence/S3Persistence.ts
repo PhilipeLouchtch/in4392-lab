@@ -22,7 +22,7 @@ export class S3Persistence<T> implements Persistence<T> {
                     }
                 }
                 return Promise.reject()
-            })
+            }).catch(err => null)
     }
 
     store(key: Keyable, value: T) {
