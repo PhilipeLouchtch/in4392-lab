@@ -13,7 +13,7 @@ const s3Client = new S3({ region: 'us-west-2' })
 const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
 
 const validate = (event) =>
-    !('step_two' in event) ? "'step_two' is a required Payload parameter"
+    !('in_out_queue' in event) ? "'in_out_queue' is a required Payload parameter"
         : !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
             : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
                 : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
