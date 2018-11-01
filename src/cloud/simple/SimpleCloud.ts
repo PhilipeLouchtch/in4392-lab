@@ -29,7 +29,7 @@ export class SimpleCloud implements Cloud {
         this.feedLambda = new LambdaController<FeedDeps>(lambdaClient, `Feed`, { step_zero: queueNames[0], step_one: queueNames[1] })
         this.stepOneLambda = new LambdaController<OneDeps>(lambdaClient, `ProcessStepOne`, { step_one: queueNames[1], step_two: queueNames[2] })
         this.stepTwoLambda = new LambdaController<WordCountDeps>(lambdaClient, 'WordCount', { input_queue: queueNames[2], output_queue: queueNames[3]})
-        this.reduceLambda = new LambdaController<ReduceDeps>(lambdaClient, `SummingReduce`, { step_two: queueNames[3], step_three: queueNames[3] })
+        this.reduceLambda = new LambdaController<ReduceDeps>(lambdaClient, `SummingReduce`, { input_queue: queueNames[3] })
     }
 
     /**

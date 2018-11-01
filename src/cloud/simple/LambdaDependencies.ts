@@ -11,10 +11,9 @@ export type OneDeps = {
 
 export type WordCountDeps = {
     input_queue: string,
-    output_queue: string,
+    output_queue: string
 }
 
 export type ReduceDeps = {
-    step_two: string,
-    step_three: string
+    input_queue: string
 }
