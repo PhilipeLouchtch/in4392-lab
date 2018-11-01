@@ -23,6 +23,7 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
+        console.log("Daemon: Invoked")
         const error = validate(event)
         if (error) {
             return callback(error)
@@ -33,6 +34,6 @@ export const handler = (event, context, callback) => {
         lambda.run();
         callback(null, { statusCode: 200, body: { message: "ok" } })
     } catch (error) {
-        callback(null, { statusCode: 500, body: { error } })
+        callback({ error })
     }
 }
