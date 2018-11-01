@@ -1,9 +1,11 @@
 import AWS = require('aws-sdk')
-import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
+import { SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
 import { S3Persistence } from '../../src/persistence/S3Persistence';
+import { JobResult } from '../../src/job/JobResult';
+import { JobStatus } from '../job/JobStatus';
 
 const s3Client = new AWS.S3({ region: 'us-west-2' })
-const persistence = new S3Persistence(s3Client, 'simple-jobs')
+const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
 const lambdaClient = new AWS.Lambda({ region: 'us-west-2' })
 
 const validate = (body) =>
@@ -40,12 +42,12 @@ export const handler = async (event, context) => {
         param: body.param,
     })
 
-    const result = await persistence.read(job)
+    const result: JobResult<SimpleJobResult> | undefined = await persistence.read(job)
 
     if (!result) {
         console.log("JobRequest not in storage, invoking Daemon..")
         const payload = { JobRequest: job.parameters }
-        const result = await lambdaClient.invoke({
+        await lambdaClient.invoke({
             FunctionName: 'Daemon',
             InvocationType: "Event",
             Payload: JSON.stringify(payload),
@@ -53,6 +55,6 @@ export const handler = async (event, context) => {
         return response(202, { message: "Job Started" })
     } else {
         console.log("JobRequest in storage, returning.")
-        return response(200, { result })
+        return response(result.status === JobStatus.RUNNING ? 202 : 200, { result })
     }
 }
