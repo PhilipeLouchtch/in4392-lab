@@ -3,9 +3,9 @@ import SQS = require("aws-sdk/clients/sqs")
 import { SqsQueue } from '../../src/queue/SqsQueue';
 import { OneDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { RandomChance } from '../../src/lib/RandomChance';
-import { MomentBasedExecutionTime } from '../../src/lib/ExecutionTime';
 import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
+import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -23,13 +23,15 @@ export const handler = (event, context, callback) => {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
+
         const payload: OneDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
         const stepTwoQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
         const chance = new RandomChance(Math.random)
-        const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
-        const lambda = new ProcessStepOneLambda(executionTime, stepOneQueue, stepTwoQueue, chance)
+        const lambda = new ProcessStepOneLambda(execTime, stepOneQueue, stepTwoQueue, chance)
 
         lambda.run();
 

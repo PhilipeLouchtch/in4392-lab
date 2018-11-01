@@ -7,6 +7,8 @@ import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { S3Persistence } from '../../src/persistence/S3Persistence';
 import { SimpleJobParams, SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
 import { JobResult } from '../../src/job/JobResult';
+import {MilliSecondBasedTimeDuration, TimeUnit} from "../../src/lib/TimeDuration";
+import {ContextBasedExecutionTime} from "../../src/lib/ContextBasedExecutionTime";
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })
@@ -28,10 +30,14 @@ export const handler = (event, context, callback) => {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
+
         const payload: ReduceDeps = event
         const job = new SimpleJobRequest(event.JobRequest)
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.in_out_queue, sqsClient))
-        const lambda = new SummingReduceLambda<SimpleJobParams>(inputQueue, job, persistence)
+
+        const lambda = new SummingReduceLambda<SimpleJobParams>(execTime, inputQueue, job, persistence)
         
         lambda.run();
         
