@@ -1,6 +1,5 @@
 import {SqsQueue} from '../../src/queue/SqsQueue';
 import {WordCountDeps} from '../../src/cloud/simple/LambdaDependencies';
-import {RandomChance} from '../../src/lib/RandomChance';
 import {MomentBasedExecutionTime} from '../../src/lib/ExecutionTime';
 import {MilliSecondBasedTimeDuration, TimeUnit} from '../../src/lib/TimeDuration';
 import {WaitingQueueUrl} from '../../src/queue/model/WaitingQueueUrl';
