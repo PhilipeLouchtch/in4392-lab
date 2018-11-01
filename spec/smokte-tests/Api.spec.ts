@@ -13,8 +13,8 @@ describe("Api", function () {
 
     it("fires successfully", function (done) {
 
-        const data: SimpleJobParams = { limit: 1002, param: 'hello' }
-        const d = handler({ data }, {})
+        const body = JSON.stringify({ limit: 1002, param: 'hello' })
+        const d = handler({ body, isBase64Encoded: false }, {})
             .then(console.log)
             .catch(console.error)
 
