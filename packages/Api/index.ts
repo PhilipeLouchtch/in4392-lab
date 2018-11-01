@@ -2,7 +2,7 @@ import AWS = require('aws-sdk')
 import { SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
 import { S3Persistence } from '../../src/persistence/S3Persistence';
 import { JobResult } from '../../src/job/JobResult';
-import { JobStatus } from '../job/JobStatus';
+import { JobStatus } from '../../src/job/JobStatus';
 
 const s3Client = new AWS.S3({ region: 'us-west-2' })
 const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
