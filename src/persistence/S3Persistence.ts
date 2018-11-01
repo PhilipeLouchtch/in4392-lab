@@ -1,7 +1,6 @@
-import {Persistence} from "./Persistence"
-import {JobRequest} from "../JobRequest"
 import {Keyable} from "../lib/Keyable"
 import S3 = require("aws-sdk/clients/s3")
+import { Persistence } from './Persistence';
 
 export class S3Persistence<T> implements Persistence<T> {
     private bucketName: string

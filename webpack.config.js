@@ -25,7 +25,8 @@ module.exports = {
     output: {
         filename: '[name]/index.js',
         path: path.resolve(__dirname, 'dist'),
-        library: '',
-        libraryTarget: 'commonjs',
-    }
+        library: '[name]',
+        libraryTarget: 'umd',
+    },
+    target: 'node',
 };
