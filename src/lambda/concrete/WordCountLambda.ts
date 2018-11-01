@@ -2,6 +2,7 @@ import {DaemonManagedLambda} from "../DaemonManagedLambda";
 import {Queue} from "../../queue/Queue";
 import {Message} from "../../source/Message";
 import {ExecutionTime} from "../../lib/ExecutionTime";
+import { WordCountOperation } from '../../operation/WordCountOperation';
 
 export class WordCountLambda extends DaemonManagedLambda {
 

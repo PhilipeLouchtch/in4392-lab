@@ -17,7 +17,7 @@ export class SimpleCloud implements Cloud {
 
     readonly feedLambda: LambdaController<FeedDeps>
     readonly stepOneLambda: LambdaController<OneDeps>
-    private stepTwoLambda: LambdaController<WordCountDeps>
+    readonly stepTwoLambda: LambdaController<WordCountDeps>
     readonly reduceLambda: LambdaController<ReduceDeps>
 
     constructor(lambdaClient: Lambda, sqsClient: SQS, uuid: string, job: SimpleJobRequest) {

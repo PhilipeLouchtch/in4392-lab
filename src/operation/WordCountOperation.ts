@@ -1,4 +1,4 @@
-class WordCountOperation {
+export class WordCountOperation {
 
     constructor() {
 
