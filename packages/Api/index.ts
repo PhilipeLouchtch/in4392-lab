@@ -15,12 +15,22 @@ const validate = (body) =>
 
 const response = (statusCode: number, body: any, headers: any = {}) => ({
     "statusCode": statusCode,
-    "headers": headers,
+    "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "content-type",
+        ...headers
+    },
     "body": JSON.stringify(body),
     "isBase64Encoded": false
 });
 
+const jobResponse = (jobId: string, jobStatus: JobResult<SimpleJobResult>) =>
+    response(jobStatus.status === JobStatus.RUNNING ? 202 : 200, { jobId, result: jobStatus })
+
 export const handler = async (event, context) => {
+
+    // Necessary for CORS preflight
+    if (event.httpMethod === "OPTIONS") return response(200, { message: "confirm" })
 
     // Try to decode the request body
     let body;
@@ -32,7 +42,7 @@ export const handler = async (event, context) => {
     }
 
     // Validate the body
-    const error = validate(body)
+    const error = !body ? "No body provided" : validate(body)
     if (error) {
         return response(400, { error })
     }
@@ -44,17 +54,22 @@ export const handler = async (event, context) => {
 
     const result: JobResult<SimpleJobResult> | undefined = await persistence.read(job)
 
+
     if (!result) {
         console.log("JobRequest not in storage, invoking Daemon..")
+        const jobStatus = { status: JobStatus.NOT_STARTED }
+        await persistence.store(job, jobStatus)
+
         const payload = { JobRequest: job.parameters }
         await lambdaClient.invoke({
             FunctionName: 'Daemon',
             InvocationType: "Event",
             Payload: JSON.stringify(payload),
         }).promise()
-        return response(202, { message: "Job Started" })
+
+        return jobResponse(job.asKey(), jobStatus)
     } else {
         console.log("JobRequest in storage, returning.")
-        return response(result.status === JobStatus.RUNNING ? 202 : 200, { result })
+        return jobResponse(job.asKey(), result)
     }
 }
