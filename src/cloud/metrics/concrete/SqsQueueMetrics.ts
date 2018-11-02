@@ -1,10 +1,16 @@
 import {QueueMetrics} from "../QueueMetrics";
 import SQS = require("aws-sdk/clients/sqs");
+import {QueueUrl} from "../../../queue/model/QueueUrl";
 
 export class SqsQueueMetrics implements QueueMetrics {
 
-    constructor(private readonly queueUrl,
+    constructor(private readonly queueName: string,
+                private readonly queueUrl: QueueUrl,
                 private readonly sqsClient: SQS) {
+    }
+
+    nameOfQueue(): string {
+        return this.queueName;
     }
 
     getApproximateMessageCount(): Promise<number> {

@@ -13,7 +13,7 @@ describe("Api", function () {
 
     it("fires successfully", function (done) {
 
-        const body = JSON.stringify({ limit: 1002, param: 'hello' })
+        const body = JSON.stringify({ limit: 500, param: '{"strategy":"AlwaysOne","x":6}' })
         const d = handler({ body, isBase64Encoded: false }, {})
             .then(console.log)
             .catch(console.error)

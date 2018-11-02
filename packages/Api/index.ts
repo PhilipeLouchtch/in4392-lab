@@ -7,6 +7,7 @@ import { JobResultPersistance } from "../../src/persistence/JobResultPersistance
 
 const s3Client = new AWS.S3({ region: 'us-west-2' })
 const persistence = new JobResultPersistance(new S3Persistence<string>(s3Client, 'simple-jobs'));
+const statisticsPersistence = new S3Persistence(s3Client, 'job-statics')
 const lambdaClient = new AWS.Lambda({ region: 'us-west-2' })
 
 const validate = (body) =>
@@ -25,8 +26,8 @@ const response = (statusCode: number, body: any, headers: any = {}) => ({
     "isBase64Encoded": false
 });
 
-const jobResponse = (jobId: string, jobStatus: JobResult<SimpleJobResult>) =>
-    response(jobStatus.status === JobStatus.RUNNING ? 202 : 200, { jobId, result: jobStatus })
+const jobResponse = (jobId: string, jobStatus: JobResult<SimpleJobResult>, statistics?: any) =>
+    response(jobStatus.status === JobStatus.RUNNING ? 202 : 200, { jobId, result: jobStatus, statistics })
 
 export const handler = async (event, context) => {
 
@@ -71,6 +72,8 @@ export const handler = async (event, context) => {
         return jobResponse(job.asKey(), jobStatus)
     } else {
         console.log("JobRequest in storage, returning.")
-        return jobResponse(job.asKey(), result)
+        let statistics = result.status === JobStatus.COMPLETED
+            ? await statisticsPersistence.read(job) : null
+        return jobResponse(job.asKey(), result, statistics) 
     }
 }

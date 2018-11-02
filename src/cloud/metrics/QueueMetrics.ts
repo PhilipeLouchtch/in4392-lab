@@ -8,5 +8,6 @@ import { MetricsBag } from './MetricsBag'
  * 1-minute resolution.
  */
 export interface QueueMetrics extends MetricsBag {
+    nameOfQueue(): string;
     getApproximateMessageCount(): Promise<number>;
 }
