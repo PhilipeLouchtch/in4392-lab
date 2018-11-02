@@ -1,10 +1,10 @@
 import { Lambda, SQS } from 'aws-sdk'
 import { LambdaController } from '../control/LambdaController'
 import { SqsQueueLifecycle } from '../control/SqsQueueLifecycle'
-import {FeedDeps, OneDeps, ReduceDeps, WordCountDeps} from './LambdaDependencies'
+import { FeedDeps, OneDeps, ReduceDeps, WordCountDeps } from './LambdaDependencies'
 import { Cloud } from '../control/Cloud'
 import { SimpleJobRequest } from '../../job/SimpleJobRequest';
-import {QueueMetrics} from "../metrics/QueueMetrics";
+import { QueueMetrics } from "../metrics/QueueMetrics";
 
 /**
  * The SimpleCloud.
@@ -56,7 +56,5 @@ export class SimpleCloud implements Cloud {
     queueMetrics(): QueueMetrics[] {
         return this.queues.map(value => value.getMetrics());
     }
-
-
 
 }

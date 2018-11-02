@@ -1,4 +1,4 @@
-import {QueueMetrics} from "./metrics/QueueMetrics";
+import { QueueMetrics } from "./metrics/QueueMetrics";
 
 interface StatisticSnapshot {
     milisFromJobStart: number,
@@ -15,7 +15,7 @@ export class QueueStatistics {
     private readonly statistics: StatisticSnapshot[];
 
     constructor(private readonly jobStartTimeEpochMilis: number,
-                private readonly queueMetrics: QueueMetrics[]) {
+        private readonly queueMetrics: QueueMetrics[]) {
         this.statistics = [];
     }
 
@@ -23,8 +23,8 @@ export class QueueStatistics {
         return Promise.all(this.queueMetrics.map(
             async (queueMetric, index) => {
                 const size = await queueMetric.getApproximateMessageCount();
-                return {name: queueMetric.nameOfQueue(), size: size, index: index};
-            })).then(queueSnapshots => this.addSnapshot(queueSnapshots.sort((a, b) => a.index-b.index)));
+                return { name: queueMetric.nameOfQueue(), size: size, index: index };
+            })).then(queueSnapshots => this.addSnapshot(queueSnapshots.sort((a, b) => a.index - b.index)));
     }
 
     private addSnapshot(snapshot: QueueSnapshot[]) {
@@ -35,21 +35,17 @@ export class QueueStatistics {
     }
 
     asCsvString(): string {
-        let csvString = `milisFromStart`;
-        for (let i = 0; i < this.queueMetrics.length; i++) {
-            csvString += ',' + this.queueMetrics[i].nameOfQueue();
-        }
-
-        for (let i = 0; i < this.statistics.length; i++) {
-            let statistic = this.statistics[i];
-            csvString += '\n' + statistic.milisFromJobStart;
-
-            for (let j = 0; j < statistic.queueSnapshots.length; j++) {
-                let queueSnapshot = statistic.queueSnapshots[j];
-                csvString += ',' + queueSnapshot.size;
-            }
-        }
-
-        return csvString;
+        return [
+            // Header
+            [
+                'milisFromStart',
+                ...this.queueMetrics.map(m => m.nameOfQueue())
+            ].join(','),
+            // Rows
+            ...this.statistics.map(s => [
+                s.milisFromJobStart,
+                ...s.queueSnapshots.map(s => s.size)
+            ].join(','))
+        ].join("\n")
     }
 }

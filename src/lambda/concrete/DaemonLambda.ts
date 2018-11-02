@@ -25,7 +25,7 @@ class DaemonLambda extends TimeImmortalLambda {
     // private lambdaClient: Lambda
     // private sqsClient: SQS
     // private uuid: string
-    private cloudControllerExecution?: Promise<IntervalExecution>
+    private cloudControllerExecution?: IntervalExecution
     private delay: TimeDurationDelay;
     private done: boolean = false;
     private cloud?: Cloud;
@@ -94,7 +94,7 @@ class DaemonLambda extends TimeImmortalLambda {
 
     async implementation(): Promise<void> {
         if (!this.cloudControllerExecution) {
-            this.cloudControllerExecution = this.initAndStartCloudController();
+            this.cloudControllerExecution = await this.initAndStartCloudController();
         }
 
         await this.queueStatistics!.recordSnapshot();
@@ -103,6 +103,7 @@ class DaemonLambda extends TimeImmortalLambda {
         await this.persistence.read(this.job).then(async (jobData: JobResult<SimpleJobResult> | undefined) => {
             this.done = !!jobData && jobData.status === JobStatus.COMPLETED
             if(this.done && this.cloud) {
+                console.log("Storing Job Statistics")
                 await new S3Persistence(new S3(), 'job-statics')
                     .store(this.job, this.queueStatistics!.asCsvString());
 
