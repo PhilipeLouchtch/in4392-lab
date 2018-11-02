@@ -14,12 +14,12 @@ export class SqsQueueLifecycle implements HasMetrics<QueueMetrics> {
 
     private queueUrl: QueueUrl
 
-    constructor(private readonly sqsClient: SQS, public readonly name: string) {
-        this.queueUrl = new QueueUrlOfNewOrExisting(this.name, sqsClient)
+    constructor(private readonly sqsClient: SQS, public readonly queueName: string) {
+        this.queueUrl = new QueueUrlOfNewOrExisting(this.queueName, sqsClient)
     }
 
     public async spawn(): Promise<any> {
-        console.log(`QueueController(${this.name}): spawn`)
+        console.log(`QueueController(${this.queueName}): spawn`)
         return this.queueUrl.promise()
     }
 
@@ -33,6 +33,6 @@ export class SqsQueueLifecycle implements HasMetrics<QueueMetrics> {
      * Now just a convenience method
      */
     async getMetrics(): Promise<QueueMetrics> {
-        return new SqsQueueMetrics(this.queueUrl, this.sqsClient);
+        return new SqsQueueMetrics(this.queueName, this.queueUrl, this.sqsClient);
     }
 }
