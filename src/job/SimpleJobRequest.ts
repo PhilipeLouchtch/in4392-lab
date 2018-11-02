@@ -1,4 +1,4 @@
-import { JobRequest, JobRequestDict } from './JobRequest';
+import { JobRequest } from './JobRequest';
 
 const crypto = require("crypto");
 
