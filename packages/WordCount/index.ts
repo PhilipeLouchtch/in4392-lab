@@ -5,7 +5,7 @@ import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDurati
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
-import { SimpleJobRequest } from '../job/SimpleJobRequest';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
