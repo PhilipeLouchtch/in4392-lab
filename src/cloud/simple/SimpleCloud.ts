@@ -4,13 +4,14 @@ import { SqsQueueLifecycle } from '../control/SqsQueueLifecycle'
 import {FeedDeps, OneDeps, ReduceDeps, WordCountDeps} from './LambdaDependencies'
 import { Cloud } from '../control/Cloud'
 import { SimpleJobRequest } from '../../job/SimpleJobRequest';
+import {QueueMetrics} from "../metrics/QueueMetrics";
 
 /**
  * The SimpleCloud.
  */
 export class SimpleCloud implements Cloud {
 
-    readonly queues: SqsQueueLifecycle[] = [];
+    private readonly queues: SqsQueueLifecycle[] = [];
 
     readonly feedLambda: LambdaController<FeedDeps>
     readonly stepOneLambda: LambdaController<OneDeps>
@@ -51,5 +52,11 @@ export class SimpleCloud implements Cloud {
             this.queues.map(queue => queue.teardown())
         )
     }
+
+    queueMetrics(): QueueMetrics[] {
+        return this.queues.map(value => value.getMetrics());
+    }
+
+
 
 }

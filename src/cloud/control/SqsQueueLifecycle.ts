@@ -32,7 +32,7 @@ export class SqsQueueLifecycle implements HasMetrics<QueueMetrics> {
     /**
      * Now just a convenience method
      */
-    async getMetrics(): Promise<QueueMetrics> {
+    getMetrics(): QueueMetrics {
         return new SqsQueueMetrics(this.queueName, this.queueUrl, this.sqsClient);
     }
 }

@@ -13,6 +13,9 @@ import { Persistence } from '../../persistence/Persistence';
 import { SimpleJobRequest, SimpleJobResult } from '../../job/SimpleJobRequest';
 import { JobResult } from '../../job/JobResult';
 import { Cloud } from '../../cloud/control/Cloud';
+import { QueueStatistics } from "../../cloud/QueueStatistics";
+import { S3Persistence } from "../../persistence/S3Persistence";
+import S3 = require("aws-sdk/clients/s3");
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
@@ -26,6 +29,7 @@ class DaemonLambda extends TimeImmortalLambda {
     private delay: TimeDurationDelay;
     private done: boolean = false;
     private cloud?: Cloud;
+    private queueStatistics?: QueueStatistics;
 
     constructor(executionTime: ExecutionTime,
         private sqsClient: SQS,
@@ -35,7 +39,7 @@ class DaemonLambda extends TimeImmortalLambda {
         private uuid: string) {
 
         super(executionTime)
-        this.delay = new TimeDurationDelay(new MilliSecondBasedTimeDuration(10, TimeUnit.seconds))
+        this.delay = new TimeDurationDelay(new MilliSecondBasedTimeDuration(5, TimeUnit.seconds))
     }
 
     /*
@@ -64,35 +68,44 @@ class DaemonLambda extends TimeImmortalLambda {
         const controller = new CloudController(this.cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
 
         // Mark the job as started
-        this.markJobStatusStarted()
+        let jobResult = await this.markJobStatusStarted();
+
+        // Init statistics tracking
+        this.queueStatistics = new QueueStatistics(jobResult.startedOn!, this.cloud.queueMetrics());
 
         // launch processing for the request
         return controller.start()
     }
 
     private async markJobStatusStarted() {
-        let jobStatus = await this.persistence.read((this.job));
+        let jobResult = await this.persistence.read((this.job));
 
-        if (!jobStatus) {
+        if (!jobResult) {
             // wasn't there for some reason, can recover
-            jobStatus = JobResult.ofNotStarted<JobResultType>().started();
+            jobResult = JobResult.ofNotStarted<JobResultType>().started();
         }
         else {
-            jobStatus = jobStatus.started();
+            jobResult = jobResult.started();
         }
 
-        return this.persistence.store(this.job, jobStatus);
+        await this.persistence.store(this.job, jobResult);
+        return jobResult;
     }
 
     async implementation(): Promise<void> {
         if (!this.cloudControllerExecution) {
             this.cloudControllerExecution = this.initAndStartCloudController();
         }
+
+        await this.queueStatistics!.recordSnapshot();
         
         // Mark as done when the job is completed
         await this.persistence.read(this.job).then(async (jobData: JobResult<SimpleJobResult> | undefined) => {
             this.done = !!jobData && jobData.status === JobStatus.COMPLETED
-            if(this.done && this.cloud){
+            if(this.done && this.cloud) {
+                await new S3Persistence(new S3(), 'job-statics')
+                    .store(this.job, this.queueStatistics!.asCsvString());
+
                 await this.cloud.terminate()
             }
         })
