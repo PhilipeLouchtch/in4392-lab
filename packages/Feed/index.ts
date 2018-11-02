@@ -19,7 +19,8 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("Feed: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+        console.log("Feed: Invoked for Job " + job.asKey())
 
         const error = validate(event)
         if (error) {
@@ -32,9 +33,8 @@ export const handler = (event, context, callback) => {
         const payload: FeedDeps = event
         const stepOneQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
         const source = new SimpleSource(event.JobRequest.param)
-        const jobRequest = new SimpleJobRequest(event.JobRequest)
 
-        const lambda = new FeedLambda(execTime, stepOneQueue, source, jobRequest)
+        const lambda = new FeedLambda(execTime, stepOneQueue, source, job)
 
         lambda.run();
 
