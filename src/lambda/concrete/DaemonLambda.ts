@@ -13,6 +13,7 @@ import { Persistence } from '../../persistence/Persistence';
 import { SimpleJobRequest, SimpleJobResult } from '../../job/SimpleJobRequest';
 import { JobResult } from '../../job/JobResult';
 import { Cloud } from '../../cloud/control/Cloud';
+import { SimpleStrategyFromJob } from '../../cloud/simple/SimpleStrategyFromJob';
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
@@ -58,7 +59,7 @@ class DaemonLambda extends TimeImmortalLambda {
         this.cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid, this.job)
 
         // Select scheduling/scaling strategy
-        const strategy = new AlwaysOneStrategy()
+        const strategy = new SimpleStrategyFromJob(this.job)
 
         // Wrap in a controller
         const controller = new CloudController(this.cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))

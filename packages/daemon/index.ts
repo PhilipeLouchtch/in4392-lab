@@ -8,27 +8,31 @@ import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
 import {JobResultPersistance} from "../../src/persistence/JobResultPersistance";
 import DaemonLambda from "../../src/lambda/concrete/DaemonLambda";
+import { ValidationRules, required, ObjectValidator } from '../../src/lib/ObjectValidator';
+import { DaemonDeps } from '../../src/cloud/simple/LambdaDependencies';
+import { jobParametersValidationRules } from '../../src/job/JobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 const lambdaClient = new Lambda({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })
 const persistence = new JobResultPersistance(new S3Persistence<string>(s3Client, 'simple-jobs'));
 
-const validate = (event) =>
-    !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
-        : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
-            : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
-                : null
+
+const rules: ValidationRules<DaemonDeps> = {
+    JobRequest: [required(), jobParametersValidationRules],
+}
+const validator = new ObjectValidator<DaemonDeps>(rules)
 
 export const handler = (event, context, callback) => {
     try {
-        const job = new SimpleJobRequest(event.JobRequest)
-
-        console.log("Daemon: Invoked for Job " + job.asKey())
-        const error = validate(event)
-        if (error) {
-            return callback(error)
+        try {
+            validator.validate(event)
+        } catch (error) {
+            return callback({ error })
         }
+
+        const job = new SimpleJobRequest(event.JobRequest)
+        console.log("Daemon: Invoked for Job " + job.asKey())
 
         const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
         const execTime = new ContextBasedExecutionTime(context, margin);

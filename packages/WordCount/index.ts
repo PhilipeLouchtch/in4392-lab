@@ -1,31 +1,32 @@
 import { SqsQueue } from '../../src/queue/SqsQueue';
-import { WordCountDeps } from '../../src/cloud/simple/LambdaDependencies';
+import { WordCountDeps, OneDeps } from '../../src/cloud/simple/LambdaDependencies';
 import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
 import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
 import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
+import { ValidationRules, required, type, ObjectValidator } from '../../src/lib/ObjectValidator';
+import { jobParametersValidationRules } from '../../src/job/JobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
-const validate = (event) =>
-    !('input_queue' in event) ? "'input_queue' is a required Payload parameter"
-        : !('output_queue' in event) ? "'output_queue' is a required Payload parameter"
-            : !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
-                : !('limit' in event.JobRequest) ? "JobRequest.limit is a required Payload parameter"
-                    : !('param' in event.JobRequest) ? "JobRequest.param is a required Payload parameter"
-                        : null
+const rules: ValidationRules<WordCountDeps> = {
+    output_queue: [required(), type('string')],
+    input_queue: [required(), type('string')],
+    JobRequest: [required(), jobParametersValidationRules],
+}
+const validator = new ObjectValidator<OneDeps>(rules)
 
 export const handler = (event, context, callback) => {
     try {
+        try {
+            validator.validate(event)
+        } catch (error) {
+            return callback({ error })
+        }
         const job = new SimpleJobRequest(event.JobRequest)
         console.log("WordCount: Invoked for Job " + job.asKey())
-
-        const error = validate(event)
-        if (error) {
-            return callback(error)
-        }
 
         const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
         const execTime = new ContextBasedExecutionTime(context, margin);

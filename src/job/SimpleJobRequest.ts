@@ -1,23 +1,27 @@
 import { JobRequest } from './JobRequest';
-
-const crypto = require("crypto");
+import { ObjectValidator, ValidationRules, type, required, oneOf } from '../lib/ObjectValidator';
 
 export type SimpleJobResult = string
 
-export interface SimpleJobParams {
-    /** Max items that are to be processed as part of the job */
-    readonly limit: number,
-    /** Some parameter, like name of the job, or keyword... something to make it "less trivial" than just a limit */
-    readonly param: string,
+export interface SimpleJobParameters {
+    strategy: "AlwaysOne" | "StaticProportional",
+    messagesPerLambda?: number,
 }
 
-export class SimpleJobRequest extends JobRequest<SimpleJobParams> {
+export const simpleJobRequestValidationRules: ValidationRules<SimpleJobParameters> = {
+    strategy: [required(), oneOf(['AlwaysOne', 'StaticProportional'])],
+    messagesPerLambda: [type('number')]
+}
 
-    asKey(): string {
-        let hash = crypto.createHash("sha256");
-        // Remove non-alpha chars so we can use this key safely in urls and names
-        let digest = hash.update(this.parameters.limit.toString()).update(this.parameters.param).digest("base64").replace(/[\W_]+/g,"");
-        return digest;
+export class SimpleJobRequest extends JobRequest<SimpleJobParameters> {
+
+    public decodeParameters() {
+        const params = JSON.parse(this.parameters.param)
+        const val = new ObjectValidator<SimpleJobParameters>(simpleJobRequestValidationRules)
+        const errors = val.validate(params)
+        if(errors.length > 0)
+            throw new Error(errors)
+        return params
     }
 
 }
