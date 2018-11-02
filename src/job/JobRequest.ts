@@ -1,12 +1,5 @@
 import { Keyable } from "../lib/Keyable";
-import { JobStatus } from './JobStatus';
 import crypto = require("crypto");
-
-/** Since we are not storing the class object but its data */
-export interface JobRequestDict<P, T> {
-    parameters: P,
-    status: JobStatus,
-}
 
 export class JobRequest<P> implements Keyable {
 

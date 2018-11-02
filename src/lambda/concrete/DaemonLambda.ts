@@ -15,6 +15,7 @@ import { JobResult } from '../../job/JobResult';
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
+type JobResultType = string;
 class DaemonLambda extends TimeImmortalLambda {
 
     // private lambdaClient: Lambda
@@ -28,7 +29,7 @@ class DaemonLambda extends TimeImmortalLambda {
         private sqsClient: SQS,
         private lambdaClient: Lambda,
         private job: SimpleJobRequest,
-        private persistence: Persistence<JobResult<string>>,
+        private persistence: Persistence<JobResult<JobResultType>>,
         private uuid: string) {
 
         super(executionTime)
@@ -61,10 +62,24 @@ class DaemonLambda extends TimeImmortalLambda {
         const controller = new CloudController(cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
 
         // Mark the job as started
-        this.persistence.store(this.job, { status: JobStatus.RUNNING })  
+        this.markJobStatusStarted()
 
         // launch processing for the request
         return controller.start()
+    }
+
+    private async markJobStatusStarted() {
+        let jobStatus = await this.persistence.read((this.job));
+
+        if (!jobStatus) {
+            // wasn't there for some reason, can recover
+            jobStatus = JobResult.ofNotStarted<JobResultType>().started();
+        }
+        else {
+            jobStatus = jobStatus.started();
+        }
+
+        return this.persistence.store(this.job, jobStatus);
     }
 
     async implementation(): Promise<void> {

@@ -1,6 +1,6 @@
 import {Keyable} from "../lib/Keyable"
 
-export interface Persistence<TValue> {
-    store(key: Keyable, value: TValue): Promise<void>
-    read(key: Keyable): Promise<TValue | undefined>
+export interface Persistence<T> {
+    store(key: Keyable, value: T): Promise<void>
+    read(key: Keyable): Promise<T | undefined>
 }

@@ -1,18 +1,18 @@
-import DaemonLambda from "../../src/lambda/concrete/DaemonLambda"
 import { MilliSecondBasedTimeDuration, TimeUnit } from "../../src/lib/TimeDuration";
 import S3 = require("aws-sdk/clients/s3")
 import SQS = require("aws-sdk/clients/sqs")
 import Lambda = require("aws-sdk/clients/lambda")
 import uuidv4 = require('uuid/v4')
 import { S3Persistence } from '../../src/persistence/S3Persistence';
-import { SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
-import { JobResult } from '../../src/job/JobResult';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
+import {JobResultPersistance} from "../../src/persistence/JobResultPersistance";
+import DaemonLambda from "../../src/lambda/concrete/DaemonLambda";
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 const lambdaClient = new Lambda({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })
-const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
+const persistence = new JobResultPersistance(new S3Persistence<string>(s3Client, 'simple-jobs'));
 
 const validate = (event) =>
     !('JobRequest' in event) ? "JobRequest is a required Payload parameter"
@@ -22,7 +22,9 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("Daemon: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+
+        console.log("Daemon: Invoked for Job " + job.asKey())
         const error = validate(event)
         if (error) {
             return callback(error)
@@ -31,8 +33,7 @@ export const handler = (event, context, callback) => {
         const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
         const execTime = new ContextBasedExecutionTime(context, margin);
 
-        const job = new SimpleJobRequest(event.JobRequest)
-        const lambda = new DaemonLambda(execTime, sqsClient, lambdaClient, job, persistence, uuidv4())
+        const lambda = new DaemonLambda(execTime, sqsClient, lambdaClient, job, persistence, job.asKey())
 
         lambda.run();
 

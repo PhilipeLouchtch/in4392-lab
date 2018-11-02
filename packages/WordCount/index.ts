@@ -1,10 +1,11 @@
 import { SqsQueue } from '../../src/queue/SqsQueue';
 import { WordCountDeps } from '../../src/cloud/simple/LambdaDependencies';
-import { MomentBasedExecutionTime } from '../../src/lib/ExecutionTime';
 import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
+import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -18,21 +19,23 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("WordCount: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+        console.log("WordCount: Invoked for Job " + job.asKey())
 
         const error = validate(event)
         if (error) {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
 
         const payload: WordCountDeps = event
 
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
         const outputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
-        const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
-        const lambda = new WordCountLambda(executionTime, inputQueue, outputQueue)
+        const lambda = new WordCountLambda(execTime, inputQueue, outputQueue)
 
         lambda.run();
 
