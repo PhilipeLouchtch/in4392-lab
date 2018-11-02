@@ -1,18 +1,18 @@
-import { SummingReduceLambda } from "../../src/lambda/concrete/SummingReduceLambda"
-import SQS = require("aws-sdk/clients/sqs")
-import S3 = require("aws-sdk/clients/s3")
-import { SqsQueue } from '../../src/queue/SqsQueue';
-import { ReduceDeps } from '../../src/cloud/simple/LambdaDependencies';
-import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
-import { S3Persistence } from '../../src/persistence/S3Persistence';
-import { SimpleJobParams, SimpleJobRequest, SimpleJobResult } from '../../src/job/SimpleJobRequest';
-import { JobResult } from '../../src/job/JobResult';
+import {SummingReduceLambda} from "../../src/lambda/concrete/SummingReduceLambda"
+import {SqsQueue} from '../../src/queue/SqsQueue';
+import {ReduceDeps} from '../../src/cloud/simple/LambdaDependencies';
+import {WaitingQueueUrl} from '../../src/queue/model/WaitingQueueUrl';
+import {S3Persistence} from '../../src/persistence/S3Persistence';
+import {SimpleJobParams, SimpleJobRequest} from '../../src/job/SimpleJobRequest';
 import {MilliSecondBasedTimeDuration, TimeUnit} from "../../src/lib/TimeDuration";
 import {ContextBasedExecutionTime} from "../../src/lib/ContextBasedExecutionTime";
+import {JobResultPersistance} from "../../src/persistence/JobResultPersistance";
+import SQS = require("aws-sdk/clients/sqs");
+import S3 = require("aws-sdk/clients/s3");
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 const s3Client = new S3({ region: 'us-west-2' })
-const persistence = new S3Persistence<JobResult<SimpleJobResult>>(s3Client, 'simple-jobs')
+const persistence = new JobResultPersistance(new S3Persistence<string>(s3Client, 'simple-jobs'));
 
 const validate = (event) =>
     !('in_out_queue' in event) ? "'in_out_queue' is a required Payload parameter"
