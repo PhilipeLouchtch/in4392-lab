@@ -21,6 +21,7 @@ export class SimpleCloud implements Cloud {
         const queues = ['zero', 'one', 'two']
             .map(value => `step_${value}_${uuid}`)
             .map(queueName => new SqsQueueLifecycle(sqsClient, queueName));
+        this.queues = queues
 
         this.feedLambda = new LambdaController<FeedDeps>(lambdaClient, `Feed`,
             { output_queue: queues[0].name, JobRequest: job.parameters })
@@ -44,6 +45,7 @@ export class SimpleCloud implements Cloud {
     }
 
     public async terminate(): Promise<any> {
+        console.log("SimpleCloud: terminating hasta la vista baby I'll be back..")
         return Promise.all(
             this.queues.map(queue => queue.teardown())
         )

@@ -12,6 +12,7 @@ import { JobStatus } from '../../job/JobStatus';
 import { Persistence } from '../../persistence/Persistence';
 import { SimpleJobRequest, SimpleJobResult } from '../../job/SimpleJobRequest';
 import { JobResult } from '../../job/JobResult';
+import { Cloud } from '../../cloud/control/Cloud';
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
@@ -24,6 +25,7 @@ class DaemonLambda extends TimeImmortalLambda {
     private cloudControllerExecution?: Promise<IntervalExecution>
     private delay: TimeDurationDelay;
     private done: boolean = false;
+    private cloud?: Cloud;
 
     constructor(executionTime: ExecutionTime,
         private sqsClient: SQS,
@@ -53,13 +55,13 @@ class DaemonLambda extends TimeImmortalLambda {
         console.log("Daemon: Starting Cloud")
 
         // Create a cloud (setup queues, lambda, permissions)
-        const cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid, this.job)
+        this.cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid, this.job)
 
         // Select scheduling/scaling strategy
         const strategy = new AlwaysOneStrategy()
 
         // Wrap in a controller
-        const controller = new CloudController(cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
+        const controller = new CloudController(this.cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
 
         // Mark the job as started
         this.markJobStatusStarted()
@@ -88,8 +90,11 @@ class DaemonLambda extends TimeImmortalLambda {
         }
         
         // Mark as done when the job is completed
-        this.persistence.read(this.job).then((jobData: JobResult<SimpleJobResult> | undefined) => {
+        await this.persistence.read(this.job).then(async (jobData: JobResult<SimpleJobResult> | undefined) => {
             this.done = !!jobData && jobData.status === JobStatus.COMPLETED
+            if(this.done && this.cloud){
+                await this.cloud.terminate()
+            }
         })
 
         return this.delay.delay();

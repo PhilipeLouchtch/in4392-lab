@@ -18,13 +18,14 @@ export class SqsQueueLifecycle implements HasMetrics<QueueMetrics> {
         this.queueUrl = new QueueUrlOfNewOrExisting(this.name, sqsClient)
     }
 
-    public async spawn() {
+    public async spawn(): Promise<any> {
         console.log(`QueueController(${this.name}): spawn`)
         return this.queueUrl.promise()
     }
 
     public async teardown() {
         const deleteQueueRequest: DeleteQueueRequest = {QueueUrl: await this.queueUrl.promise()};
+        console.log(`tearing down queue: ${deleteQueueRequest.QueueUrl}`)
         return this.sqsClient.deleteQueue(deleteQueueRequest).promise();
     }
 
