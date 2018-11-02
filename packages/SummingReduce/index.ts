@@ -23,7 +23,8 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("SummingReduce: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+        console.log("SummingReduce: Invoked for Job " + job.asKey())
 
         const error = validate(event)
         if (error) {
@@ -34,7 +35,6 @@ export const handler = (event, context, callback) => {
         const execTime = new ContextBasedExecutionTime(context, margin);
 
         const payload: ReduceDeps = event
-        const job = new SimpleJobRequest(event.JobRequest)
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.in_out_queue, sqsClient))
 
         const lambda = new SummingReduceLambda<SimpleJobParams>(execTime, inputQueue, job, persistence)
