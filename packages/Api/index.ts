@@ -58,7 +58,7 @@ export const handler = async (event, context) => {
 
     if (!result) {
         console.log("JobRequest not in storage, invoking Daemon..")
-        const jobStatus = { status: JobStatus.NOT_STARTED }
+        const jobStatus: JobResult<SimpleJobResult> = JobResult.ofNotStarted()
         await persistence.store(job, jobStatus)
 
         const payload = { JobRequest: job.parameters }
