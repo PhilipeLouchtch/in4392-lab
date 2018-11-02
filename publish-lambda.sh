@@ -17,10 +17,10 @@ function run () {
   # $1: Path to distro folder
   # $2: Function name
   cd ./dist/$1 # required, otherwise folders /dist/test will end up in .zip
-  zip -X -r ./deployment.zip *    
-  aws lambda update-function-code --function-name $1 --zip-file fileb://deployment.zip
-  rm deployment.zip
-
+  zip -X -r ./$1.zip *
+  aws s3 cp ./$1.zip s3:///lamdbas-fns/$1.zip
+  # aws lambda update-function-code --function-name $1 --zip-file fileb://$1.zip
+  rm $1.zip
 }
 
 run "$1"
