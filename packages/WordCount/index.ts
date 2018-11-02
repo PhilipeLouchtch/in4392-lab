@@ -5,6 +5,7 @@ import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDurati
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
+import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -25,14 +26,15 @@ export const handler = (event, context, callback) => {
             return callback(error)
         }
 
+        const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
+        const execTime = new ContextBasedExecutionTime(context, margin);
 
         const payload: WordCountDeps = event
 
         const inputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.input_queue, sqsClient))
         const outputQueue = new SqsQueue(sqsClient, new WaitingQueueUrl(payload.output_queue, sqsClient))
-        const executionTime = new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(45, TimeUnit.seconds)) // TODO Param.
 
-        const lambda = new WordCountLambda(executionTime, inputQueue, outputQueue)
+        const lambda = new WordCountLambda(execTime, inputQueue, outputQueue)
 
         lambda.run();
 
