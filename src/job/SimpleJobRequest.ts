@@ -15,7 +15,8 @@ export class SimpleJobRequest extends JobRequest<SimpleJobParams> {
 
     asKey(): string {
         let hash = crypto.createHash("sha256");
-        let digest = hash.update(this.parameters.limit.toString()).update(this.parameters.param).digest("base64");
+        // Remove non-alpha chars so we can use this key safely in urls and names
+        let digest = hash.update(this.parameters.limit.toString()).update(this.parameters.param).digest("base64").replace(/[\W_]+/g,"");
         return digest;
     }
 

@@ -22,7 +22,9 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("Daemon: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+
+        console.log("Daemon: Invoked for Job " + job.asKey())
         const error = validate(event)
         if (error) {
             return callback(error)
@@ -31,8 +33,7 @@ export const handler = (event, context, callback) => {
         const margin = new MilliSecondBasedTimeDuration(10, TimeUnit.seconds)
         const execTime = new ContextBasedExecutionTime(context, margin);
 
-        const job = new SimpleJobRequest(event.JobRequest)
-        const lambda = new DaemonLambda(execTime, sqsClient, lambdaClient, job, persistence, uuidv4())
+        const lambda = new DaemonLambda(execTime, sqsClient, lambdaClient, job, persistence, job.asKey())
 
         lambda.run();
 

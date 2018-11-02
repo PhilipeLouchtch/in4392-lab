@@ -1,11 +1,11 @@
 import { SqsQueue } from '../../src/queue/SqsQueue';
 import { WordCountDeps } from '../../src/cloud/simple/LambdaDependencies';
-import { MomentBasedExecutionTime } from '../../src/lib/ExecutionTime';
 import { MilliSecondBasedTimeDuration, TimeUnit } from '../../src/lib/TimeDuration';
 import { WaitingQueueUrl } from '../../src/queue/model/WaitingQueueUrl';
 import { WordCountLambda } from "../../src/lambda/concrete/WordCountLambda";
 import SQS = require("aws-sdk/clients/sqs");
 import { ContextBasedExecutionTime } from '../../src/lib/ContextBasedExecutionTime';
+import { SimpleJobRequest } from '../../src/job/SimpleJobRequest';
 
 const sqsClient = new SQS({ region: 'us-west-2' })
 
@@ -19,7 +19,8 @@ const validate = (event) =>
 
 export const handler = (event, context, callback) => {
     try {
-        console.log("WordCount: Invoked")
+        const job = new SimpleJobRequest(event.JobRequest)
+        console.log("WordCount: Invoked for Job " + job.asKey())
 
         const error = validate(event)
         if (error) {
