@@ -20,6 +20,7 @@ export class QueueUrlFromName implements QueueUrl {
         return this.sqsClient.getQueueUrl({QueueName: this.name}).promise()
         .then(result => {
             if(result.QueueUrl) {
+                this.cachedValue = result.QueueUrl
                 return result.QueueUrl
             } else {
                 throw new Error(`No queue found with name ${this.name}`);

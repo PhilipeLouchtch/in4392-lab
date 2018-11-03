@@ -23,7 +23,7 @@ export abstract class Lambda {
         // (by using the supplied fn and chaining it by itself), the loop is exited.
         if (this.nearingLambdaTimeout()) {
             console.log(`Lambda: nearing timeout`)
-            return this.lambdaLifespanTimeoutHandler(this.implementation);
+            return this.lambdaLifespanTimeoutHandler(this.implementation.bind(this));
         }
 
         if (this.continueExecution()) {
