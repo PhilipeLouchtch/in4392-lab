@@ -7,6 +7,7 @@
     "@types/moment": "^2.13.0",
     "aws-sdk": "^2.327.0",
     "moment": "^2.22.2",
+    "node-zip": "^1.1.1",
     "twitter": "^1.7.1",
     "uuid": "^3.3.2"
   },
@@ -23,6 +24,7 @@
   },
   "scripts": {
     "test": "ts-node node_modules/jasmine/bin/jasmine",
-    "build": "npx webpack --config webpack.config.js"
+    "build": "npx webpack --config webpack.config.js",
+    "upload": "node publishs3-lambda.js"
   }
 }
