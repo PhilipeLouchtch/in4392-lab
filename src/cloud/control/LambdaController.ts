@@ -61,7 +61,7 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
         })
     }
 
-    async getMetrics(): Promise<LambdaMetrics> {
+    getMetrics(): LambdaMetrics {
         return new LambdaMetrics(this.invocations.length)
     }
 

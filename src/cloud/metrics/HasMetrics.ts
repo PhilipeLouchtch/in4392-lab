@@ -6,6 +6,6 @@ import { MetricsBag } from './MetricsBag'
  */
 export interface HasMetrics<T extends MetricsBag> {
 
-    getMetrics(): Promise<T>
+    getMetrics(): T
 
 }
