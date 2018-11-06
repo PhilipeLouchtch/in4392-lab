@@ -47,7 +47,10 @@ export class LambdaController<T extends Object> implements HasMetrics<LambdaMetr
         this.pending++
         console.log(`LambdaController(${this.name}): spawning..`)
         return new Promise((resolve, reject) => {
-            this.lambdaClient.invoke({ FunctionName: this.name, Payload: JSON.stringify(this.deps) }, (err, data) => {
+            this.lambdaClient.invoke({
+                FunctionName: this.name,
+                InvocationType: "Event",
+                Payload: JSON.stringify(this.deps) }, (err, data) => {
                 if (err) {
                     console.error(`LambdaController(${this.name}): could not invoke.`, err)
                     reject(err)
