@@ -14,33 +14,22 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
         this.queueUrl = queueUrl;
     }
 
+    /** May throw "AWS.SimpleQueueService.NonExistentQueue" once queue is destroyed */
     public async sendSingle(msg: TMessage) {
-        return this.queueUrl.promise().then(queueUrl => {
-            console.log(`SQSQueue: send message ${msg.identifier} to ${queueUrl}`)
-            this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data }).promise()
-            .then((d) => {
-                console.log(`SQSQueue: send succeeded`, d)
-            }).catch((e) => {
-                console.error(`SQSQueue: send failed`, e)
-            })
-        })
+        const queueUrl = await this.queueUrl.promise()
+        console.log(`SQSQueue: send message ${msg.identifier} to ${queueUrl}`)
+        await this.sqsClient.sendMessage({ QueueUrl: queueUrl, MessageBody: msg.data }).promise()
     }
 
     // Will create a maximum sized batch or until the provider is depleted
+    /** May throw "AWS.SimpleQueueService.NonExistentQueue" once queue is destroyed */
     public async sendBatched(msgProvider: Iterator<TMessage>) {
-        return this.makeSqsBatch(msgProvider)
-            .then(sendMsgBatchRequest => {
-                console.log(`SQSQueue: send ${sendMsgBatchRequest.Entries.length} messages to ${sendMsgBatchRequest.QueueUrl}`)
-                return this.sqsClient.sendMessageBatch(sendMsgBatchRequest).promise() // needs promise?
-                .then((d) => {
-                    console.log(`SQSQueue: send succeeded`, d)
-                }).catch((e) => {
-                    console.error(`SQSQueue: send failed`, e)
-                })
-            })
-            .then(() => { }); // conform to the interface
+        const sendMsgBatchRequest = await this.makeSqsBatch(msgProvider)
+        console.log(`SQSQueue: send ${sendMsgBatchRequest.Entries.length} messages to ${sendMsgBatchRequest.QueueUrl}`)
+        await this.sqsClient.sendMessageBatch(sendMsgBatchRequest).promise()
     }
 
+    /** May throw "AWS.SimpleQueueService.NonExistentQueue" once queue is destroyed */
     public async receive(msgConsumer: (string) => Promise<void>, queueIsEmptyHandler: () => Promise<void>) {
         const handleUndefined = (value: string | undefined) => value ? value : "";
 
@@ -61,27 +50,27 @@ export class SqsQueue<TMessage extends Message<string, string>> implements Queue
                 };
             });
 
-        return Promise.all(messages
-            .map(msg => this.queueUrl.promise().then(queueUrl => {
-                try {
-                    console.log(`SQSQueue: consuming message`)
-                    msgConsumer(msg.data);
-                    // remove msg from queue if processed successfully
-                    console.log(`SQSQueue: delete message from queue`)
-                    return this.sqsClient.deleteMessage({
-                        QueueUrl: queueUrl,
-                        ReceiptHandle: msg.identifier
-                    }).promise();
-                }
-                catch (e) {
-                    console.error(`Failed to process msg ["${msg.data}"], error: ${e}`);
-                    return new Promise(resolve => resolve());
-                }
-            })
-            )).then(() => { }); // conform to the interface
+        await Promise.all(messages
+            .map(msg => this.queueUrl.promise()
+                .then(queueUrl => {
+                    try {
+                        console.log(`SQSQueue: consuming message`)
+                        msgConsumer(msg.data);
+                        // remove msg from queue if processed successfully
+                        console.log(`SQSQueue: delete message from queue`)
+                        return this.sqsClient.deleteMessage({
+                            QueueUrl: queueUrl,
+                            ReceiptHandle: msg.identifier
+                        }).promise();
+                    }
+                    catch (e) {
+                        console.error(`Failed to process msg ["${msg.data}"], error: ${e}`);
+                        return new Promise(resolve => resolve());
+                    }
+                })))
     }
 
-    private async makeSqsBatch(source: Iterator<TMessage>): Promise<SendMessageBatchRequest> {
+    private makeSqsBatch(source: Iterator<TMessage>): Promise<SendMessageBatchRequest> {
         return new Promise<SendMessageBatchRequest>(async resolve => {
             let msgs: SendMessageBatchRequestEntry[] = [];
             for (let i = 0; i < 10; i++) {

@@ -11,6 +11,7 @@ import { JobResult } from '../../job/JobResult';
 // Warning: this lambda does not scale!
 export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
     private probablyDone: boolean;
+    private done = false;
 
     constructor(executionTime: ExecutionTime,
                 private readonly queue: Queue<Message<string, T>>,
@@ -29,7 +30,7 @@ export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
                 return this.queue.receive(msgTwo => {
                         console.log(`StatelessReduceLambda: received msg 2: ${msgTwo}`);
                         const reduced = this.reduceOperation.reduce(msgOne, msgTwo);
-                        return this.queue.sendSingle({ identifier: "", data: reduced });
+                        return this.queue.sendSingle({ identifier: "", data: reduced }).catch(e => this.handleReject(e));
                     },
                     async () => {
                         // only one message was in queue -> done
@@ -47,15 +48,22 @@ export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
                         this.probablyDone = true;
 
                         return this.persist.store(this.job, jobStatusCompleted);
-                    });
+                    }).catch(e => this.handleReject(e));
             },
             () => {
                 // Queue totally empty, do nothing
                 return Promise.resolve();
-            });
+            }).catch(e => this.handleReject(e));
     }
 
     protected continueExecution(): boolean {
-        return !this.probablyDone;
+        return !this.probablyDone && !this.done;
+    }
+
+    protected handleReject(e) {
+        if (e.code === "AWS.SimpleQueueService.NonExistentQueue") {
+            console.log("Queue is gone, assuming done.")
+            this.done = true
+        }
     }
 }
