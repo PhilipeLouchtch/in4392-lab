@@ -17,7 +17,7 @@ export class StatelessReduceLambda<P, T> extends DaemonManagedLambda {
                 private readonly reduceOperation: ReduceOperation<T>,
                 private readonly job: JobRequest<P>,
                 private readonly persist: Persistence<JobResult<T>>) {
-        super(new MomentBasedExecutionTime(new MilliSecondBasedTimeDuration(4, TimeUnit.minutes)));
+        super(executionTime);
         this.probablyDone = false;
     }
 
