@@ -16,6 +16,7 @@ import { Cloud } from '../../cloud/control/Cloud';
 import { QueueStatistics } from "../../cloud/QueueStatistics";
 import { S3Persistence } from "../../persistence/S3Persistence";
 import S3 = require("aws-sdk/clients/s3");
+import { StaticProportionalStrategy } from '../../cloud/simple/StaticProportionalStrategy';
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
@@ -62,7 +63,10 @@ class DaemonLambda extends TimeImmortalLambda {
         this.cloud = new SimpleCloud(this.lambdaClient, this.sqsClient, this.uuid, this.job)
 
         // Select scheduling/scaling strategy
-        const strategy = new AlwaysOneStrategy()
+        const prop = this.job.parameters.param.match(/prop:([0-9]+)/)
+        const strategy = prop
+            ? new StaticProportionalStrategy(this.job, parseInt(prop[1]))
+            : new AlwaysOneStrategy()
 
         // Wrap in a controller
         const controller = new CloudController(this.cloud, strategy, new TimeBasedInterval(SCHEDULING_INTERVAL))
@@ -98,11 +102,11 @@ class DaemonLambda extends TimeImmortalLambda {
         }
 
         await this.queueStatistics!.recordSnapshot();
-        
+
         // Mark as done when the job is completed
         await this.persistence.read(this.job).then(async (jobData: JobResult<SimpleJobResult> | undefined) => {
             this.done = !!jobData && jobData.status === JobStatus.COMPLETED
-            if(this.done && this.cloud) {
+            if (this.done && this.cloud) {
                 console.log("Storing Job Statistics")
                 await new S3Persistence(new S3(), 'job-statics')
                     .store(this.job, this.queueStatistics!.asCsvString());
