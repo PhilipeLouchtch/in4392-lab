@@ -112,6 +112,7 @@ class DaemonLambda extends TimeImmortalLambda {
                     .store(this.job, this.queueStatistics!.asCsvString());
 
                 await this.cloud.terminate()
+                this.cloudControllerExecution!.stop()
             }
         })
 
