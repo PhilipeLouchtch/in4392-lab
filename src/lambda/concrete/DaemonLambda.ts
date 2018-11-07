@@ -1,8 +1,7 @@
-import { Lambda, SQS } from 'aws-sdk';
+import { Lambda as AWSLambda, SQS } from 'aws-sdk';
 import { CloudController } from '../../cloud/control/CloudController'
 import { SimpleCloud } from '../../cloud/simple/SimpleCloud';
 import { AlwaysOneStrategy } from '../../cloud/simple/AlwaysOneStrategy';
-import { TimeImmortalLambda } from "../TimeImmortalLambda";
 import { ExecutionTime } from "../../lib/ExecutionTime";
 import { IntervalExecution } from "../../lib/IntervalExecution";
 import { MilliSecondBasedTimeDuration, TimeUnit } from "../../lib/TimeDuration";
@@ -17,11 +16,12 @@ import { QueueStatistics } from "../../cloud/QueueStatistics";
 import { S3Persistence } from "../../persistence/S3Persistence";
 import S3 = require("aws-sdk/clients/s3");
 import { StaticProportionalStrategy } from '../../cloud/simple/StaticProportionalStrategy';
+import { Lambda } from '../Lambda';
 
 const SCHEDULING_INTERVAL = new MilliSecondBasedTimeDuration(5000, TimeUnit.milliseconds)
 
 type JobResultType = string;
-class DaemonLambda extends TimeImmortalLambda {
+class DaemonLambda extends Lambda {
 
     // private lambdaClient: Lambda
     // private sqsClient: SQS
@@ -34,12 +34,12 @@ class DaemonLambda extends TimeImmortalLambda {
 
     constructor(executionTime: ExecutionTime,
         private sqsClient: SQS,
-        private lambdaClient: Lambda,
+        private lambdaClient: AWSLambda,
         private job: SimpleJobRequest,
         private persistence: Persistence<JobResult<JobResultType>>,
         private uuid: string) {
 
-        super(executionTime)
+        super(() => this.finalize(true), executionTime)
         this.delay = new TimeDurationDelay(new MilliSecondBasedTimeDuration(5, TimeUnit.seconds))
     }
 
@@ -88,9 +88,20 @@ class DaemonLambda extends TimeImmortalLambda {
             // wasn't there for some reason, can recover
             jobResult = JobResult.ofNotStarted<JobResultType>().started();
         }
-        else {
-            jobResult = jobResult.started();
+        jobResult = jobResult.started();
+
+        await this.persistence.store(this.job, jobResult);
+        return jobResult;
+    }
+
+    private async markJobStatusTimedout() {
+        let jobResult = await this.persistence.read((this.job));
+
+        if (!jobResult) {
+            // wasn't there for some reason, can recover
+            jobResult = JobResult.ofNotStarted<JobResultType>().started();
         }
+        jobResult = jobResult.timedout();
 
         await this.persistence.store(this.job, jobResult);
         return jobResult;
@@ -111,16 +122,25 @@ class DaemonLambda extends TimeImmortalLambda {
                 await new S3Persistence(new S3(), 'job-statics')
                     .store(this.job, this.queueStatistics!.asCsvString());
 
-                await this.cloud.terminate()
-                this.cloudControllerExecution!.stop()
+                await this.finalize()
             }
         })
 
-        return this.delay.delay();
+        if(!this.done)
+            return this.delay.delay();
     }
 
     protected continueExecution(): boolean {
         return !this.done;
+    }
+
+    protected async finalize(becauseTimeout: boolean = false): Promise<any> {
+        console.log(`DaemonLambda: Finalizing` + (becauseTimeout ? ` because of timeout`: ``))
+        if (becauseTimeout)
+            await this.markJobStatusTimedout()
+
+        await this.cloud!.terminate()
+        this.cloudControllerExecution!.stop()
     }
 }
 

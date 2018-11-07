@@ -3,4 +3,5 @@ export enum JobStatus {
     RUNNING = "RUNNING",
     COMPLETED = "COMPLETED",
     FAILED = "FAILED",
+    TIMEDOUT = "TIMEDOUT",
 }

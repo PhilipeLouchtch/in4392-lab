@@ -30,6 +30,10 @@ export class JobResult<T>{
         return new JobResult<T>(JobStatus.FAILED, this.startedOn, Date.now());
     }
 
+    timedout() {
+        return new JobResult<T>(JobStatus.TIMEDOUT, this.startedOn, Date.now());
+    }
+
     serialize(): string {
         return JSON.stringify({status: this.status, startedOn: this.startedOn, finishedOn: this.finishedOn, data: this.data});
     }
